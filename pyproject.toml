@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "database"
+version = "0.1.0"
+description = ""
+authors = ["AlbinLind <albin.lindqvist@hotmail.se>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.6.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.2.2"
+black = "^24.2.0"
+pytest = "^8.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
