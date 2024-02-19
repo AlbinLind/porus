@@ -6,8 +6,8 @@ The project will also leverage some packages that are "essential" in today's (20
 # Development
 Firstly I will create a [MVP](https://en.wikipedia.org/wiki/Minimum_viable_product) where I setup an abstract class from which I can create tables.
 ### MVP
-- [ ] Build `TableBase`
-- [ ] Create an engine that is associated with the table
-- [ ] Be able to create a table with columns
-- [ ] Function to add to the database
+- [X] Build `TableBase`
+- [X] Create an engine that is associated with the table
+- [X] Be able to create a table with columns
+- [X] Function to add to the database
 - [ ] Function to get `n` items from the database
