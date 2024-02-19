@@ -1,11 +1,13 @@
 import sqlite3
-from abc import ABC
-from typing import Any
+from abc import ABC, abstractmethod
+from typing import Any, Generic, TypeVar, get_args
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model, validate_call
+
 
 def column_field(primary_key: bool = False, **kwargs):
-    return Field(json_schema_extra={"primary_key": primary_key},**kwargs)
+    return Field(json_schema_extra={"primary_key": primary_key}, **kwargs)
+
 
 def _get_type(field: Any) -> str:
     """Returns the SQLite affinity for the given field, if it cannot be inferred,
@@ -21,6 +23,7 @@ def _get_type(field: Any) -> str:
     if field.__name__ == "bool":
         return "INTEGER"
     return "BLOB"
+
 
 class Engine:
     def __init__(self, path: str):
@@ -40,14 +43,16 @@ class Engine:
     @property
     def tables(self) -> list[type["Table"]]:
         return self._tables
-    
+
     def _create_table(self, table: type["Table"]):
         statement = f"CREATE TABLE {table.table_name}"
         fields = []
         for field in table.model_fields:
-            field_statement = f"{field} {_get_type(table.model_fields[field].annotation)}"
+            field_statement = (
+                f"{field} {_get_type(table.model_fields[field].annotation)}"
+            )
             if json_schema := table.model_fields[field].json_schema_extra:
-                if json_schema.get("primary_key"): # type: ignore
+                if json_schema.get("primary_key"):  # type: ignore
                     field_statement += " PRIMARY KEY"
             fields.append(field_statement)
         statement += f"({', '.join(fields)});"
@@ -56,33 +61,60 @@ class Engine:
         self.conn.commit()
 
     def push(self, table: type["Table"]):
-        if not self._check_if_table_exists(table):
-            self._tables.append(table)
-            self._create_table(table)
+            if not self._check_if_table_exists(table):
+                self._tables.append(table)
+                self._create_table(table)
 
 
+T = TypeVar("T")
 
-class Table(BaseModel, ABC):
-    
-    def __class_getitem__(cls, item):
-        return item
 
-    @property
-    def table_name(self) -> str:
-        return self.__class__.__name__.lower()
-    
-    def _get_insert_value_statement(self) -> str:
-        values = self.model_dump()
-        fields = [values[field] for field in self.model_fields]
-        return str(tuple(fields))
+class Column:
+    def __init__(self, type_: T):
+        self.type = type_
 
-    def _get_insert_prefix(self) -> str:
-        return f"INSERT INTO {self.table_name} VALUES"
+    def __call__(self, name: str, val: T) -> "Column":
+        self.name = name
+        self.val = val
+        return self
+
+    def __str__(self) -> str:
+        return f"Column({self.name}, {self.val}, {self.type})"  # type: ignore
+
+    def __eq__(self, other: "Column") -> "Column": # type: ignore
+        raise NotImplementedError("EQ is not yet implemented, but will be")
+
+    def __or__(self, other: "Column") -> "Column":
+        raise NotImplementedError("OR is not yet implemented, but will be")
+
+    def __and__(self, other: "Column") -> "Column":
+        raise NotImplementedError("AND is not yet implemented, but will be")
+
+    def __class_getitem__(cls, item: T) -> "Column":
+        return cls(item)
+
+
+class Table(ABC):
+    def __init_subclass__(cls, *args, **kwargs):
+        for ann, val in cls.__annotations__.items():
+            setattr(cls, ann, val)
+        return super().__new__(cls)
+
+    def __init__(self, **kwargs):
+        if (
+            len(kwargs) != len(self.__annotations__)
+            and len(kwargs) != len(self.__annotations__) - 1
+        ):
+            raise TypeError(
+                f"Expected {len(self.__annotations__)} arguments, got {len(kwargs)}"
+            )
+        for key, value in kwargs.items():
+            col = self.__annotations__[key](name=key, val=value)
 
 
 class User(Table):
-    id: int = column_field(primary_key=True)
-    name: str
+    id: Column[int]
+    name: Column[str]
 
 
 def remove_database():
@@ -92,7 +124,8 @@ def remove_database():
 
 
 if __name__ == "__main__":
-    remove_database()
-    engine = Engine("test.db")
-    engine.push(User)
-    usr1 = User(id=1, name="John")
+    # remove_database()
+    # engine = Engine("test.db")
+    # engine.push(User)
+    usr1 = User(id="som", name="smt")
+    print(User.name & User.name )
