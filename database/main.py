@@ -59,12 +59,14 @@ class Engine:
         if not self._check_if_table_exists(table):
             self._create_table(table)
 
-    def _convert_row_to_object(self, table: type["Table"], row: tuple[Any]) -> "Table":
+    def _convert_row_to_object(self, table: "Table", row: tuple[Any]) -> "Table":
         fields = table.model_fields
-        data = {}
+        if len(row) != len(fields):
+            raise ValueError(f"Number of columns in the row ({len(row)}) does not match the number of fields in the table ({len(fields)}).")
         for i, field in enumerate(fields):
-            data[field] = row[i]
-        return table(**data)
+            if getattr(table, field) != row[i]:
+                setattr(table, field, row[i])
+        return table
 
     def insert(self, objs: list["Table"]) -> list["Table"]:
         """Add the objects to the database and return the objects.
@@ -75,14 +77,14 @@ class Engine:
             values = []
             for key, value in obj.model_dump().items():
                 if obj.model_fields[key].json_schema_extra:
-                    if obj.model_fields[key].json_schema_extra.get("primary_key"):  # type: ignore
+                    if obj.model_fields[key].json_schema_extra.get("primary_key") and not value:  # type: ignore
                         continue
                 keys.append(str(key))
                 values.append(str(value))
 
             statement = f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES ({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
             result = self.conn.execute(statement, values).fetchone()
-            row_list.append(self._convert_row_to_object(obj.__class__, result))
+            row_list.append(self._convert_row_to_object(obj, result))
         self.conn.commit()
         return row_list
 
