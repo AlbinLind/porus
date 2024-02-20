@@ -1,5 +1,6 @@
+from enum import Enum
 import sqlite3
-from typing import Any
+from typing import Any, TypeVar, Union
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
@@ -27,6 +28,61 @@ def _get_type(field: Any) -> str:
         return "INTEGER"
     return "BLOB"
 
+class QueryClause(Enum):
+    SELECT = 0
+    FROM = 1
+    WHERE = 2
+    GROUP_BY =  3
+    ORDER_BY = 4
+    LIMIT = 5
+    OFFSET = 6
+
+class Query:
+    def __init__(self, select: list["Column"] | type["Table"], engine: "Engine"):
+        self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
+        self.engine = engine
+        self.select = select
+        # We initially assume we can return an object if we are selecting from a table
+        # Otherwise, we will return a tuple of size equal to the size of the select list
+        # For example, if we add a group by clause we can no longer return an object, 
+        # since we cannot know how it will look, and no model is defined for that.
+        self.result_column = select
+        self._can_return_table = issubclass(select, Table) # type: ignore
+        if self._can_return_table:
+            self._select_table()
+        
+    def _select_table(self):
+        self.statements.append((f"SELECT * FROM {self.select.table_name}", QueryClause.FROM, None)) # type: ignore
+        return self
+
+    def _select_columns(self, select: list["Column"]):
+        raise NotImplementedError("You may only select all columns from a table at this moment...")
+
+    def limit(self, limit: int):
+        self.statements.append(("LIMIT ?", QueryClause.LIMIT, [limit]))
+        return self 
+        
+    def _build_statement(self) -> tuple[str, list[Any]]:
+        statement = ""
+        values = []
+        clauses_added = set()
+        self.statements.sort(key=lambda x: x[1].value)
+        for clause, clause_type, value in self.statements:
+            if clause_type in clauses_added:
+                raise ValueError(f"Clause {clause_type} already added, you cannot provide a clause multiple times.")
+            statement += " " + clause
+            if value:
+                values.extend(value)
+            clauses_added.add(clause_type)
+        return statement, values
+        
+    def all(self) -> list[tuple[Any]] | list["Table"]:
+        statement, values = self._build_statement()
+        print(statement)
+        result = self.engine.conn.execute(statement, values).fetchall()
+        if self._can_return_table:
+            return [self.engine._convert_row_to_object(self.result_column, row) for row in result] # type: ignore
+        return result
 
 class Engine:
     def __init__(self, path: str):
@@ -59,14 +115,18 @@ class Engine:
         if not self._check_if_table_exists(table):
             self._create_table(table)
 
-    def _convert_row_to_object(self, table: "Table", row: tuple[Any]) -> "Table":
+    def _convert_row_to_object(self, table: Union["Table" , type["Table"]], row: tuple[Any]) -> "Table":
         fields = table.model_fields
         if len(row) != len(fields):
             raise ValueError(f"Number of columns in the row ({len(row)}) does not match the number of fields in the table ({len(fields)}).")
-        for i, field in enumerate(fields):
-            if getattr(table, field) != row[i]:
-                setattr(table, field, row[i])
-        return table
+        if isinstance(table, Table):
+            for i, field in enumerate(fields):
+                if getattr(table, field) != row[i]:
+                    setattr(table, field, row[i])
+            return table
+        if isinstance(table, type):
+            return table(**{field: row[i] for i, field in enumerate(fields)})
+        raise ValueError(f"Table is neither a Table nor a type, it is {type(table)}, which is not supported.")
 
     def insert(self, objs: list["Table"]) -> list["Table"]:
         """Add the objects to the database and return the objects.
@@ -119,8 +179,8 @@ class Table(BaseModel, metaclass=TableMeta):
         setattr(cls, "table_name", cls.__name__.lower())
 
     @property
-    def table_name(self):
-        return self.__class__.__name__.lower()
+    def table_name(cls) -> str:
+        return cls.__class__.__name__.lower()
 
 
 class User(Table):
@@ -140,3 +200,5 @@ if __name__ == "__main__":
     engine.push(User)
     usr1 = User(name="smt")
     engine.insert([usr1])
+    q = Query(User, engine).limit(10).limit(5).all()
+    print(q)
