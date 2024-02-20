@@ -41,6 +41,13 @@ def test_add_multiple_rows():
     res = engine.conn.execute("SELECT count(*) FROM User").fetchone()
     assert res[0] == 2
     
+def test_inserting_returns_same_object():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    res = engine.insert([usr])
+    assert id(res[0]) == id(usr)
+    
 def test_query_single_row():
     engine = Engine(":memory:")
     engine.push(User)
