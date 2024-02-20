@@ -1,14 +1,15 @@
+from pydantic import ValidationError
 import pytest
-from database.main import Table, Column, remove_database, User, Engine
+from database.main import Table, remove_database, User, Engine
 
 def test_create_table():
     class A(Table):
-        id: Column[int]
-        something: Column[str]
+        id: int
+        something: str
 
     _ = A(id=1, something="hello")        
     
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
         _ = A()
 
     _ = A(id="1", something="sdfo")
@@ -27,7 +28,7 @@ def test_add_single_row():
     engine = Engine(":memory:")
     engine.push(User)
     usr = User(name="Hello")
-    engine.insert(usr)
+    engine.insert([usr])
     res = engine.conn.execute("SELECT count(*) FROM User").fetchone()
     assert res[0] == 1
 
@@ -90,7 +91,7 @@ def test_query_with_where():
     usr2 = User(name="Name number 2")
     usr3 = User(name="Name number 3")
     engine.insert([usr, usr2, usr3])
-    res = engine.query(User).where(User.name == "Name number 2")
+    res = engine.query(User).where(User.c.name == "Name number 2")
     assert len(res) == 1
     assert isinstance(res[0], User)
     assert res[0].name == usr2.name
@@ -102,7 +103,7 @@ def test_query_with_multiple_where():
     usr2 = User(name="Name number 2")
     usr3 = User(name="Name number 3")
     engine.insert([usr, usr2, usr3])
-    res = engine.query(User).where(User.name == "Name number 2" | User.name == "Name number 3")
+    res = engine.query(User).where(User.c.name == "Name number 2" | User.c.name == "Name number 3")
     assert len(res) == 2
     assert isinstance(res[0], User)
     assert res[0].name == usr2.name
