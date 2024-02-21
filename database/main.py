@@ -1,6 +1,6 @@
 from enum import Enum
 import sqlite3
-from typing import Any, Union
+from typing import Any, Union, overload
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
@@ -28,6 +28,7 @@ def _get_type(field: Any) -> str:
         return "INTEGER"
     return "BLOB"
 
+
 def _convert_values(values: list[Any]) -> list[Any]:
     """Convert the values to a string type if SQLite3 cannot automatically interpret the type.
     SQLite 3 can interpret the following types: None, int, float, str, bytes.
@@ -39,8 +40,9 @@ def _convert_values(values: list[Any]) -> list[Any]:
         if isinstance(value, bool):
             values[i] = int(value)
             continue
-        values[i] = str(value) 
+        values[i] = str(value)
     return values
+
 
 class QueryClause(Enum):
     SELECT = 0
@@ -53,7 +55,7 @@ class QueryClause(Enum):
 
 
 class Query:
-    def __init__(self, select: list["Column"] | type["Table"], engine: "Engine"):
+    def __init__(self, select: Union[ list["Column"], type["Table"]], engine: "Engine"):
         self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
         self.engine = engine
         self.select = select
@@ -74,9 +76,16 @@ class Query:
         return self
 
     def _select_columns(self):
-        raise NotImplementedError(
-            "You may only select all columns from a table at this moment..."
-        )
+        if not self.select:
+            raise ValueError("You must provide at least one column to select.")
+        if not isinstance(self.select, list):
+            raise ValueError("Select must be a list of columns.")
+        table_name = self.select[0].table_name
+        if not all(x.table_name == table_name for x in self.select):
+            raise ValueError("All columns must be from the same table.")
+        self.statements.append((f"FROM {table_name}", QueryClause.FROM, None))
+        self.statements.append((f"SELECT {', '.join([x.column_name for x in self.select])}", QueryClause.SELECT, None))
+        return self
 
     def limit(self, limit: int):
         self.statements.append(("LIMIT ?", QueryClause.LIMIT, [limit]))
@@ -109,7 +118,6 @@ class Query:
             )
         if QueryClause.OFFSET in clauses and QueryClause.LIMIT not in clauses:
             self.limit(-1)
-
 
     def _build_statement(self) -> tuple[str, list[Any]]:
         statement = ""
@@ -196,8 +204,16 @@ class Engine:
             f"Table is neither a Table nor a type, it is {type(table)}, which is not supported."
         )
 
-    def query(self, select: list["Column"] | type["Table"]) -> Query:
-        return Query(select, self)
+    def query(self, *select: Union["Column", type["Table"]]) -> Query:
+        if len(select) == 1:
+            if isinstance(select[0], Column):
+                return Query([select[0]], self)
+            if issubclass(select[0], Table):
+                return Query(select[0], self)
+            raise ValueError("The select parameter must be a Column or a Table.")
+        if not all(isinstance(x, Column) for x in select):
+            raise ValueError("All elements in the select list must be of type Column.")
+        return Query(list(select), self) # type: ignore
 
     def insert(self, objs: list["Table"]) -> list["Table"]:
         """Add the objects to the database and return the objects.
@@ -244,9 +260,10 @@ class WhereStatement:
 
 
 class Column:
-    def __init__(self, field: FieldInfo, column_name: str):
+    def __init__(self, field: FieldInfo, column_name: str, table_name: str):
         self.field: FieldInfo = field
         self.column_name = column_name
+        self.table_name = table_name
 
     def __repr__(self):
         return f"Column(type={self.field.annotation})"
@@ -305,7 +322,7 @@ class Column:
             )
         if len(other) == 0:
             raise ValueError("You cannot compare a column to an empty list.")
-        if not all(isinstance(x, self.field.annotation) for x in other): # type: ignore
+        if not all(isinstance(x, self.field.annotation) for x in other):  # type: ignore
             raise ValueError(
                 f"Column has type {self.field.annotation}, but you are comparing it to a list of {type(other)}"
             )
@@ -322,13 +339,13 @@ class GenericColumn:
     def __getattr__(self, name: str):
         if name not in self.table.model_fields:
             raise AttributeError(f"Column {name} not found in {self.table.__name__}")
-        return Column(field=self.table.model_fields[name], column_name=name)
+        return Column(field=self.table.model_fields[name], column_name=name, table_name=self.table.table_name)
 
 
 class TableMeta(ModelMetaclass):
-    def __getattr__(self, name):  
+    def __getattr__(self, name):
         if name == "_" or name == "c":
-            return GenericColumn(self) 
+            return GenericColumn(self)
         return super().__getattr__(name)  # type: ignore
 
 
@@ -355,7 +372,8 @@ def remove_database():
 if __name__ == "__main__":
     remove_database()
     engine = Engine("test.db")
-    # engine.push(User)
-    # usr1 = User(name="smt")
-    # engine.insert([usr1])
-    # res: list[User] = engine.query(User).all()
+    engine.push(User)
+    usr1 = User(name="smt")
+    engine.insert([usr1])
+    res: list[Any] = engine.query(User.c.name).all()
+    print(res)
