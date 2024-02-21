@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 import pytest
-from database.main import ColumnField, Table, remove_database, User, Engine
+from database.main import ColumnField, Table, User, Engine
 
 
 def test_create_table():
@@ -199,7 +199,7 @@ def test_COMPLEX_SQL_command_2():
     engine.insert([a, a2, a3, a4, a5])
     res: list[A] = (
         engine.query(A)
-        .where(A.c.name["Name number 2", "Name number 3"] & (A.c.name != "Name number 2") & (A.c.boolean == True))
+        .where(A.c.name["Name number 2", "Name number 3"] & (A.c.name != "Name number 2") & (A.c.boolean == True))  # noqa: E712
         .all()
     )
     assert len(res) == 1
