@@ -50,26 +50,49 @@ class Query:
         self._can_return_table = issubclass(select, Table) # type: ignore
         if self._can_return_table:
             self._select_table()
+        else:
+            self._select_columns()
         
     def _select_table(self):
-        self.statements.append((f"SELECT * FROM {self.select.table_name}", QueryClause.FROM, None)) # type: ignore
+        self.statements.append(("SELECT *", QueryClause.SELECT, None))
+        self.statements.append((f"FROM {self.select.table_name}", QueryClause.FROM, None)) # type: ignore
         return self
 
-    def _select_columns(self, select: list["Column"]):
+    def _select_columns(self):
         raise NotImplementedError("You may only select all columns from a table at this moment...")
 
     def limit(self, limit: int):
         self.statements.append(("LIMIT ?", QueryClause.LIMIT, [limit]))
         return self 
     
+    def offset(self, offset: int):
+        self.statements.append(("OFFSET ?", QueryClause.OFFSET, [offset]))
+        return self
+    
     def where(self, clause: "WhereStatement"):
         self.statements.append((f"WHERE {clause.statement}", QueryClause.WHERE, clause.values))
         return self
         
+    def _validate_query(self):
+        """Make sure that the query are valid, and that there are no conflicting clauses.
+        The function will try and fix the query if possible.
+        For example if the query contains an OFFSET clause, but no LIMIT clause, it will set the LIMIT as -1"""
+        clauses = [x[1] for x in self.statements]
+        if QueryClause.SELECT not in clauses:
+            raise ValueError("You must provide a SELECT clause. If this error is raised, something has "
+                             "gone wrong when creating the query, and it is an internal error.")
+        if QueryClause.FROM not in clauses:
+            raise ValueError("You must provide a FROM clause. If this error is raised, something has "
+                             "gone wrong when creating the query, and it is an internal error.")
+        if QueryClause.OFFSET in clauses and QueryClause.LIMIT not in clauses:
+            self.limit(-1)
+        
+
     def _build_statement(self) -> tuple[str, list[Any]]:
         statement = ""
         values = []
         clauses_added = set()
+        self._validate_query()
         self.statements.sort(key=lambda x: x[1].value)
         for clause, clause_type, value in self.statements:
             if clause_type in clauses_added:
@@ -265,4 +288,3 @@ if __name__ == "__main__":
     engine.push(User)
     usr1 = User(name="smt")
     engine.insert([usr1])
-    
