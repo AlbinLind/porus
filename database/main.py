@@ -61,6 +61,10 @@ class Query:
     def limit(self, limit: int):
         self.statements.append(("LIMIT ?", QueryClause.LIMIT, [limit]))
         return self 
+    
+    def where(self, clause: "WhereStatement"):
+        self.statements.append((f"WHERE {clause.statement}", QueryClause.WHERE, clause.values))
+        return self
         
     def _build_statement(self) -> tuple[str, list[Any]]:
         statement = ""
@@ -128,6 +132,9 @@ class Engine:
             return table(**{field: row[i] for i, field in enumerate(fields)})
         raise ValueError(f"Table is neither a Table nor a type, it is {type(table)}, which is not supported.")
 
+    def query(self, select: list["Column"] | type["Table"]) -> Query:
+        return Query(select, self)
+
     def insert(self, objs: list["Table"]) -> list["Table"]:
         """Add the objects to the database and return the objects.
         It automatically commits the changes."""
@@ -148,14 +155,72 @@ class Engine:
         self.conn.commit()
         return row_list
 
+class WhereStatement:
+    def __init__(self, statement: str, values: list[Any] = []):
+        self.statement = f"{statement}"
+        self.values = values
+
+    def __and__(self, other: "WhereStatement"):
+        self.statement = f"({self.statement} AND {other.statement})"
+        self.values.extend(other.values)
+        return self
+    
+    def __or__(self, other: "WhereStatement"):
+        self.statement = f"({self.statement} OR {other.statement})"
+        self.values.extend(other.values)
+        return self
+
+    def __repr__(self):
+        return f"WHERE {self.statement}, ({', '.join([str(value) for value in self.values])})"
+
 
 class Column:
-    def __init__(self, field: FieldInfo):
+    def __init__(self, field: FieldInfo, column_name: str):
         self.field: FieldInfo = field
+        self.column_name = column_name
 
     def __repr__(self):
         return f"Column(type={self.field.annotation})"
+    
+    def __eq__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} = ?", [other])
+    
+    def __ne__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} != ?", [other])
+    
+    def __lt__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} < ?", [other])
+    
+    def __le__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} <= ?", [other])
+    
+    def __gt__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} > ?", [other])
+    
+    def __ge__(self, other: Any) -> WhereStatement: # type: ignore
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} >= ?", [other])
 
+    def __getitem__(self, other: list[Any]) -> WhereStatement:
+        # This is not final, if there is a better use case for getitem, we will change it.
+        # Alternatives for SQL IN clause are:
+        # Right shift: User.c.id >> [1,2,3]
+        # Matrix Multiplication: User.c.id @ [1,2,3]
+        # Power: User.c.id ** [1,2,3]
+        if not isinstance(other, list):
+            raise ValueError(f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}")
+        return WhereStatement(f"{self.column_name} IN ({', '.join(['?' for _ in range(len(other))])})", other)
 
 class GenericColumn:
     def __init__(self, table: type["Table"]):
@@ -164,7 +229,7 @@ class GenericColumn:
     def __getattr__(self, name: str):
         if name not in self.table.model_fields:
             raise AttributeError(f"Column {name} not found in {self.table.__name__}")
-        return Column(field=self.table.model_fields[name])
+        return Column(field=self.table.model_fields[name], column_name=name)
 
 
 class TableMeta(ModelMetaclass):
@@ -200,5 +265,4 @@ if __name__ == "__main__":
     engine.push(User)
     usr1 = User(name="smt")
     engine.insert([usr1])
-    q = Query(User, engine).limit(10).limit(5).all()
-    print(q)
+    
