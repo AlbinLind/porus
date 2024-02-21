@@ -39,8 +39,6 @@ class QueryClause(Enum):
     OFFSET = 6
 
 
-
-
 class Query:
     def __init__(self, select: list["Column"] | type["Table"], engine: "Engine"):
         self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
@@ -51,9 +49,9 @@ class Query:
         # For example, if we add a group by clause we can no longer return an object,
         # since we cannot know how it will look, and no model is defined for that.
         self.result_column = select
-        self._can_return_table = isinstance(select, Table)
-        if isinstance(select, Table):
-            self._select_table(select.table_name)
+        self._can_return_table = isinstance(select, TableMeta)
+        if isinstance(select, TableMeta):
+            self._select_table(str(select.table_name))
         else:
             self._select_columns()
 
@@ -126,7 +124,7 @@ class Query:
         statement, values = self._build_statement()
         print(statement)
         result = self.engine.conn.execute(statement, values).fetchall()
-        if self._can_return_table and isinstance(self.result_column, Table):
+        if self._can_return_table and isinstance(self.result_column, TableMeta):
             return [
                 self.engine._convert_row_to_object(self.result_column, row)
                 for row in result
@@ -197,7 +195,7 @@ class Engine:
             for key, value in obj.model_dump().items():
                 if obj.model_fields[key].json_schema_extra:
                     if (
-                        obj.model_fields[key].json_schema_extra.get("primary_key") # type: ignore
+                        obj.model_fields[key].json_schema_extra.get("primary_key")  # type: ignore
                         and not value
                     ):
                         continue
