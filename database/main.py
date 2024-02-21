@@ -122,7 +122,6 @@ class Query:
             list[tuple[Any]] | list[Table]: A list of objects representing the rows from the table, or a list of tuples if the return type is not a table.
         """
         statement, values = self._build_statement()
-        print(statement)
         result = self.engine.conn.execute(statement, values).fetchall()
         if self._can_return_table and isinstance(self.result_column, TableMeta):
             return [
@@ -305,9 +304,9 @@ class GenericColumn:
 
 
 class TableMeta(ModelMetaclass):
-    def __getattr__(self, name):  # type: ignore
+    def __getattr__(self, name):  
         if name == "_" or name == "c":
-            return GenericColumn(self)
+            return GenericColumn(self) 
         return super().__getattr__(name)  # type: ignore
 
 
