@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 import pytest
-from database.main import Table, remove_database, User, Engine
+from database.main import ColumnField, Table, remove_database, User, Engine
 
 
 def test_create_table():
@@ -131,3 +131,78 @@ def test_query_with_multiple_where():
     assert isinstance(res[0], User)
     assert res[0].name == usr2.name
     assert res[1].name == usr3.name
+
+def test_ne_query():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    usr2 = User(name="Name number 2")
+    usr3 = User(name="Name number 3")
+    engine.insert([usr, usr2, usr3])
+    res: list[User] = (
+        engine.query(User)
+        .where(User.c.name != "Name number 2")
+        .all()
+    )
+    assert len(res) == 2
+    assert isinstance(res[0], User)
+    assert res[0].name == usr.name
+    assert res[1].name == usr3.name
+
+def test_IN_SQL_command():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    usr2 = User(name="Name number 2")
+    usr3 = User(name="Name number 3")
+    engine.insert([usr, usr2, usr3])
+    res: list[User] = (
+        engine.query(User)
+        .where(User.c.name["Name number 2", "Name number 3"])
+        .all()
+    )
+    assert len(res) == 2
+    assert isinstance(res[0], User)
+    assert res[0].name == usr2.name
+    assert res[1].name == usr3.name
+
+def test_COMPLEX_SQL_command():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    usr2 = User(name="Name number 2")
+    usr3 = User(name="Name number 3")
+    engine.insert([usr, usr2, usr3])
+    res: list[User] = (
+        engine.query(User)
+        .where(User.c.name["Name number 2", "Name number 3"] & (User.c.name != "Name number 2"))
+        .all()
+    )
+    assert len(res) == 1
+    assert isinstance(res[0], User)
+    assert res[0].name == usr3.name
+
+def test_COMPLEX_SQL_command_2():
+    class A(Table):
+        id: int = ColumnField(primary_key=True)
+        name: str
+        boolean: bool
+        somefloat: float
+
+    engine = Engine(":memory:")
+    engine.push(A)
+    a = A( name="Hello", boolean=True, somefloat=1.0)
+    a2 = A(name="Name number 2", boolean=False, somefloat=2.0)
+    a3 = A(name="Name number 3", boolean=True, somefloat=3.0)
+    a4 = A(name="Name number 4", boolean=False, somefloat=4.0)
+    a5 = A(name="Name number 3", boolean=False, somefloat=5.0)
+    engine.insert([a, a2, a3, a4, a5])
+    res: list[A] = (
+        engine.query(A)
+        .where(A.c.name["Name number 2", "Name number 3"] & (A.c.name != "Name number 2") & (A.c.boolean == True))
+        .all()
+    )
+    assert len(res) == 1
+    assert res[0].name == a3.name
+    assert res[0].boolean == a3.boolean
+    assert res[0].somefloat == a3.somefloat
