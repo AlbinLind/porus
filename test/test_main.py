@@ -206,3 +206,28 @@ def test_COMPLEX_SQL_command_2():
     assert res[0].name == a3.name
     assert res[0].boolean == a3.boolean
     assert res[0].somefloat == a3.somefloat
+
+
+def test_query_with_only_one_column():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    usr2 = User(name="Name number 2")
+    usr3 = User(name="Name number 3")
+    engine.insert([usr, usr2, usr3])
+    res: list[tuple[str]] = engine.query(User.c.name).all()
+    assert len(res) == 3
+    assert isinstance(res[0][0], str)
+    assert res[0][0] == usr.name
+
+def test_query_with_two_columns():
+    engine = Engine(":memory:")
+    engine.push(User)
+    usr = User(name="Hello")
+    usr2 = User(name="Name number 2")
+    usr3 = User(name="Name number 3")
+    engine.insert([usr, usr2, usr3])
+    res = engine.query(User.c.name, User.c.id).all()
+    assert len(res) == 3
+    assert isinstance(res[0], tuple)
+    assert res[0] == (usr.name, usr.id)
