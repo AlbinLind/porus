@@ -59,7 +59,7 @@ def test_query_single_row():
     engine = Engine(":memory:")
     engine.push(User)
     usr = User(name="Hello")
-    engine.insert(usr)
+    engine.insert([usr])
     res = engine.query(User).all()
     assert len(res) == 1
     assert isinstance(res[0], User)
@@ -124,7 +124,7 @@ def test_query_with_multiple_where():
     engine.insert([usr, usr2, usr3])
     res = (
         engine.query(User)
-        .where(User.c.name == "Name number 2" | User.c.name == "Name number 3")
+        .where((User.c.name == "Name number 2") | (User.c.name == "Name number 3"))
         .all()
     )
     assert len(res) == 2
