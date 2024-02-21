@@ -37,8 +37,10 @@ class QueryClause(Enum):
     LIMIT = 5
     OFFSET = 6
 
+C = TypeVar("C", "Column", tuple[Any])
+
 class Query:
-    def __init__(self, select: list["Column"] | type["Table"], engine: "Engine"):
+    def __init__(self, select: C | "Table", engine: "Engine"):
         self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
         self.engine = engine
         self.select = select
@@ -103,13 +105,19 @@ class Query:
             clauses_added.add(clause_type)
         return statement, values
         
-    def all(self) -> list[tuple[Any]] | list["Table"]:
-        statement, values = self._build_statement()
-        print(statement)
-        result = self.engine.conn.execute(statement, values).fetchall()
-        if self._can_return_table:
-            return [self.engine._convert_row_to_object(self.result_column, row) for row in result] # type: ignore
-        return result
+    def all(self) -> list[C] | list["Table"]:
+            """
+            Retrieve all rows from the database table.
+
+            Returns:
+                list[tuple[Any]] | list[Table]: A list of objects representing the rows from the table, or a tuple if the return type is not a table.
+            """
+            statement, values = self._build_statement()
+            print(statement)
+            result = self.engine.conn.execute(statement, values).fetchall()
+            if self._can_return_table:
+                return [self.engine._convert_row_to_object(self.result_column, row) for row in result] # type: ignore
+            return result
 
 class Engine:
     def __init__(self, path: str):
@@ -288,3 +296,4 @@ if __name__ == "__main__":
     engine.push(User)
     usr1 = User(name="smt")
     engine.insert([usr1])
+    print(engine.query(User).all())
