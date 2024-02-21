@@ -1,6 +1,6 @@
 from enum import Enum
 import sqlite3
-from typing import Any, Sequence, TypeVar, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
