@@ -122,7 +122,7 @@ def test_query_with_multiple_where():
     usr2 = User(name="Name number 2")
     usr3 = User(name="Name number 3")
     engine.insert([usr, usr2, usr3])
-    res = (
+    res: list[User] = (
         engine.query(User)
         .where((User.c.name == "Name number 2") | (User.c.name == "Name number 3"))
         .all()
