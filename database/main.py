@@ -124,7 +124,7 @@ class Query:
         Retrieve all rows from the database table.
 
         Returns:
-            list[tuple[Any]] | list[Table]: A list of objects representing the rows from the table, or a tuple if the return type is not a table.
+            list[tuple[Any]] | list[Table]: A list of objects representing the rows from the table, or a list of tuples if the return type is not a table.
         """
         statement, values = self._build_statement()
         print(statement)
