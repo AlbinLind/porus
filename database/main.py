@@ -84,7 +84,7 @@ class Query:
         if not all(x.table_name == table_name for x in self.select):
             raise ValueError("All columns must be from the same table.")
         self.statements.append((f"FROM {table_name}", QueryClause.FROM, None))
-        self.statements.append((f"SELECT {', '.join([x.column_name for x in self.select])}", QueryClause.SELECT, None))
+        self.statements.append((f"SELECT {', '.join([x.get_query() for x in self.select])}", QueryClause.SELECT, None))
         return self
 
     def limit(self, limit: int):
@@ -98,6 +98,31 @@ class Query:
     def where(self, clause: "WhereStatement"):
         self.statements.append(
             (f"WHERE {clause.statement}", QueryClause.WHERE, clause.values)
+        )
+        return self
+    
+    def group_by(self, *columns: "Column"):
+        if not all(isinstance(x, Column) for x in columns):
+            raise ValueError("All elements in the group by list must be of type Column.")
+        self.statements.append(
+            (
+                f"GROUP BY {', '.join([x.column_name for x in columns])}",
+                QueryClause.GROUP_BY,
+                None,
+            )
+        )
+        self._can_return_table = False
+        return self
+    
+    def order_by(self, *columns: "Column", ascending: bool = True):
+        if not all(isinstance(x, Column) for x in columns):
+            raise ValueError("All elements in the order by list must be of type Column.")
+        self.statements.append(
+            (
+                f"ORDER BY {', '.join([x.column_name for x in columns])} {'ASC' if ascending else 'DESC'}",
+                QueryClause.ORDER_BY,
+                None,
+            )
         )
         return self
 
@@ -258,12 +283,44 @@ class WhereStatement:
     def __repr__(self):
         return f"WHERE {self.statement}, ({', '.join([str(value) for value in self.values])})"
 
+class ColumnFunction(Enum):
+    COUNT = "COUNT"
+    MAX = "MAX"
+    MIN = "MIN"
+    SUM = "SUM"
+    AVG = "AVG"
 
 class Column:
     def __init__(self, field: FieldInfo, column_name: str, table_name: str):
         self.field: FieldInfo = field
         self.column_name = column_name
         self.table_name = table_name
+        self._function_applied = None
+
+    def get_query(self) -> str:
+        if self._function_applied:
+            return f"{self._function_applied.value}({self.column_name})"
+        return f"{self.column_name}"
+
+    def max(self):
+        self._function_applied = ColumnFunction.MAX
+        return self
+    
+    def min(self):
+        self._function_applied = ColumnFunction.MIN
+        return self
+    
+    def sum(self):
+        self._function_applied = ColumnFunction.SUM
+        return self
+
+    def count(self):
+        self._function_applied = ColumnFunction.COUNT
+        return self
+    
+    def avg(self):
+        self._function_applied = ColumnFunction.AVG
+        return self
 
     def __repr__(self):
         return f"Column(type={self.field.annotation})"
@@ -376,4 +433,16 @@ if __name__ == "__main__":
     usr1 = User(name="smt")
     engine.insert([usr1])
     res: list[Any] = engine.query(User.c.name).all()
-    print(res)
+
+    class A(Table):
+        id: int = ColumnField(primary_key=True)
+        number: str 
+        boolean: bool
+
+    engine.push(A)
+    a = A(number="one", boolean=True)
+    a2 = A(number="two", boolean=False)
+    a3 = A(number="three", boolean=True)
+    engine.insert([a, a2, a3])
+    res: list[A] = engine.query(A.c.id.count(), A.c.boolean).group_by(A.c.boolean).all()
+    print(res) 
