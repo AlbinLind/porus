@@ -1,6 +1,6 @@
 from enum import Enum
 import sqlite3
-from typing import Any, TypeVar, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
@@ -39,11 +39,10 @@ class QueryClause(Enum):
     OFFSET = 6
 
 
-C = TypeVar("C", "Column", tuple[Any])
 
 
 class Query:
-    def __init__(self, select: C | "Table", engine: "Engine"):
+    def __init__(self, select: list["Column"] | type["Table"], engine: "Engine"):
         self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
         self.engine = engine
         self.select = select
@@ -52,17 +51,15 @@ class Query:
         # For example, if we add a group by clause we can no longer return an object,
         # since we cannot know how it will look, and no model is defined for that.
         self.result_column = select
-        self._can_return_table = issubclass(select, Table)  # type: ignore
-        if self._can_return_table:
-            self._select_table()
+        self._can_return_table = isinstance(select, Table)
+        if isinstance(select, Table):
+            self._select_table(select.table_name)
         else:
             self._select_columns()
 
-    def _select_table(self):
+    def _select_table(self, table_name: str):
         self.statements.append(("SELECT *", QueryClause.SELECT, None))
-        self.statements.append(
-            (f"FROM {self.select.table_name}", QueryClause.FROM, None)
-        )  # type: ignore
+        self.statements.append((f"FROM {table_name}", QueryClause.FROM, None))
         return self
 
     def _select_columns(self):
@@ -119,7 +116,7 @@ class Query:
             clauses_added.add(clause_type)
         return statement, values
 
-    def all(self) -> list[C] | list["Table"]:
+    def all(self) -> list[tuple[Any]] | list["Table"]:
         """
         Retrieve all rows from the database table.
 
@@ -129,11 +126,11 @@ class Query:
         statement, values = self._build_statement()
         print(statement)
         result = self.engine.conn.execute(statement, values).fetchall()
-        if self._can_return_table:
+        if self._can_return_table and isinstance(self.result_column, Table):
             return [
                 self.engine._convert_row_to_object(self.result_column, row)
                 for row in result
-            ]  # type: ignore
+            ]
         return result
 
 
@@ -200,9 +197,9 @@ class Engine:
             for key, value in obj.model_dump().items():
                 if obj.model_fields[key].json_schema_extra:
                     if (
-                        obj.model_fields[key].json_schema_extra.get("primary_key")
+                        obj.model_fields[key].json_schema_extra.get("primary_key") # type: ignore
                         and not value
-                    ):  # type: ignore
+                    ):
                         continue
                 keys.append(str(key))
                 values.append(str(value))
