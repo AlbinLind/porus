@@ -28,6 +28,19 @@ def _get_type(field: Any) -> str:
         return "INTEGER"
     return "BLOB"
 
+def _convert_values(values: list[Any]) -> list[Any]:
+    """Convert the values to a string type if SQLite3 cannot automatically interpret the type.
+    SQLite 3 can interpret the following types: None, int, float, str, bytes.
+    If the type is not one of these types, it will be converted to a string.
+    The exception is bool, which will be converted to an int."""
+    for i, value in enumerate(values):
+        if isinstance(value, (str, int, float, bytes, type(None))):
+            continue
+        if isinstance(value, bool):
+            values[i] = int(value)
+            continue
+        values[i] = str(value) 
+    return values
 
 class QueryClause(Enum):
     SELECT = 0
@@ -97,6 +110,7 @@ class Query:
         if QueryClause.OFFSET in clauses and QueryClause.LIMIT not in clauses:
             self.limit(-1)
 
+
     def _build_statement(self) -> tuple[str, list[Any]]:
         statement = ""
         values = []
@@ -112,6 +126,7 @@ class Query:
             if value:
                 values.extend(value)
             clauses_added.add(clause_type)
+        values = _convert_values(values)
         return statement, values
 
     def all(self) -> Any:
@@ -199,9 +214,10 @@ class Engine:
                     ):
                         continue
                 keys.append(str(key))
-                values.append(str(value))
+                values.append(value)
 
             statement = f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES ({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
+            values = _convert_values(values)
             result = self.conn.execute(statement, values).fetchone()
             row_list.append(self._convert_row_to_object(obj, result))
         self.conn.commit()
@@ -277,19 +293,25 @@ class Column:
             )
         return WhereStatement(f"{self.column_name} >= ?", [other])
 
-    def __getitem__(self, other: list[Any]) -> WhereStatement:
+    def __getitem__(self, other: Any) -> WhereStatement:
         # This is not final, if there is a better use case for getitem, we will change it.
         # Alternatives for SQL IN clause are:
         # Right shift: User.c.id >> [1,2,3]
         # Matrix Multiplication: User.c.id @ [1,2,3]
         # Power: User.c.id ** [1,2,3]
-        if not isinstance(other, list):
+        if not isinstance(other, (list, tuple)):
             raise ValueError(
                 f"Column has type {self.field.annotation}, but you are comparing it to a {type(other)}"
             )
+        if len(other) == 0:
+            raise ValueError("You cannot compare a column to an empty list.")
+        if not all(isinstance(x, self.field.annotation) for x in other): # type: ignore
+            raise ValueError(
+                f"Column has type {self.field.annotation}, but you are comparing it to a list of {type(other)}"
+            )
         return WhereStatement(
             f"{self.column_name} IN ({', '.join(['?' for _ in range(len(other))])})",
-            other,
+            list(other),
         )
 
 
@@ -333,7 +355,7 @@ def remove_database():
 if __name__ == "__main__":
     remove_database()
     engine = Engine("test.db")
-    engine.push(User)
-    usr1 = User(name="smt")
-    engine.insert([usr1])
-    res: list[User] = engine.query(User).all()
+    # engine.push(User)
+    # usr1 = User(name="smt")
+    # engine.insert([usr1])
+    # res: list[User] = engine.query(User).all()
