@@ -1,6 +1,6 @@
 from enum import Enum
 import sqlite3
-from typing import Any, Union
+from typing import Any, Sequence, TypeVar, Union
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
@@ -114,7 +114,7 @@ class Query:
             clauses_added.add(clause_type)
         return statement, values
 
-    def all(self) -> list[tuple[Any]] | list["Table"]:
+    def all(self) -> Any:
         """
         Retrieve all rows from the database table.
 
@@ -336,4 +336,4 @@ if __name__ == "__main__":
     engine.push(User)
     usr1 = User(name="smt")
     engine.insert([usr1])
-    print(engine.query(User).all())
+    res: list[User] = engine.query(User).all()
