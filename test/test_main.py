@@ -1,6 +1,9 @@
 from pydantic import ValidationError
 import pytest
-from database.main import ColumnField, Table, User, Engine
+from database.column import ColumnField
+from database.engine import Engine
+from database.table import Table
+from database.main import User
 
 
 def test_create_table():
