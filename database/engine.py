@@ -1,12 +1,12 @@
 from database.column import Column
-from database.query import Query
-from database.table import Table
+from database.statement.query import Query
 from database.utilities import _get_type
 from database.utilities import _convert_values
+from database.table import Table
 
 
 import sqlite3
-from typing import Any, Union
+from typing import  Any, Union
 
 
 class Engine:
@@ -62,13 +62,13 @@ class Engine:
     def query(self, *select: Union["Column", type["Table"]]) -> Query:
         if len(select) == 1:
             if isinstance(select[0], Column):
-                return Query([select[0]], self)
+                return Query(table_or_subquery=[select[0]], engine=self)
             if issubclass(select[0], Table):
-                return Query(select[0], self)
+                return Query(table_or_subquery=select[0], engine=self)
             raise ValueError("The select parameter must be a Column or a Table.")
         if not all(isinstance(x, Column) for x in select):
             raise ValueError("All elements in the select list must be of type Column.")
-        return Query(list(select), self)  # type: ignore
+        return Query(table_or_subquery=list(select), engine=self)  # type: ignore
 
     def insert(self, objs: list["Table"]) -> list["Table"]:
         """Add the objects to the database and return the objects.
