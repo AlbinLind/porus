@@ -49,6 +49,7 @@ class Update(BaseStatement):
 
 
     def returning(self, *columns: Column):
+        """Return the columns after the update. If no columns are provided, returns all columns"""
         if len(columns) == 0:
             self.statements.append(("RETURNING *", UpdateClause.RETURNING, None))
             return self
