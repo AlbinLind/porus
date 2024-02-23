@@ -110,3 +110,13 @@ class BaseStatement(ABC):
                 for row in result
             ]
         return result
+
+    def first(self, debug: bool = False) -> Any:
+        """Retrive the first result from the database table."""
+        statement, values = self._build_statement()
+        if debug:
+            print(statement, values)
+        result = self.engine.conn.execute(statement, values).fetchone()
+        if self._can_return_table and isinstance(self.result_column, TableMeta):
+            return self.engine._convert_row_to_object(self.result_column, result)
+        return result
