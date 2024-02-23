@@ -1,5 +1,6 @@
-from database.column import Column
+from database.column import Column, SetStatement
 from database.statement.query import Query
+from database.statement.update import Update
 from database.utilities import _get_type
 from database.utilities import _convert_values
 from database.table import Table
@@ -59,18 +60,7 @@ class Engine:
             f"Table is neither a Table nor a type, it is {type(table)}, which is not supported."
         )
 
-    def query(self, *select: Union["Column", type["Table"]]) -> Query:
-        if len(select) == 1:
-            if isinstance(select[0], Column):
-                return Query(table_or_subquery=[select[0]], engine=self)
-            if issubclass(select[0], Table):
-                return Query(table_or_subquery=select[0], engine=self)
-            raise ValueError("The select parameter must be a Column or a Table.")
-        if not all(isinstance(x, Column) for x in select):
-            raise ValueError("All elements in the select list must be of type Column.")
-        return Query(table_or_subquery=list(select), engine=self)  # type: ignore
-
-    def insert(self, objs: list["Table"]) -> list["Table"]:
+    def insert(self, objs: list["Table"]) -> list[Any]:
         """Add the objects to the database and return the objects.
         It automatically commits the changes."""
         row_list = []
@@ -93,3 +83,19 @@ class Engine:
             row_list.append(self._convert_row_to_object(obj, result))
         self.conn.commit()
         return row_list
+
+    def query(self, *select: Union["Column", type["Table"]]) -> Query:
+        if len(select) == 1:
+            if isinstance(select[0], Column):
+                return Query(table_or_subquery=[select[0]], engine=self)
+            if issubclass(select[0], Table):
+                return Query(table_or_subquery=select[0], engine=self)
+            raise ValueError("The select parameter must be a Column or a Table.")
+        if not all(isinstance(x, Column) for x in select):
+            raise ValueError("All elements in the select list must be of type Column.")
+        return Query(table_or_subquery=list(select), engine=self)  # type: ignore
+
+    def update(self, *update: SetStatement) -> Update:
+        if not all(isinstance(x, SetStatement) for x in update):
+            raise ValueError("All elements in the update list must be of type SetStatement, if you want to replace objects, use engine.replace().")
+        return Update(table_or_subquery=list(update), engine=self)

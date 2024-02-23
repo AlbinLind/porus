@@ -1,5 +1,14 @@
 from enum import Enum
 
+class UpdateClause(Enum):
+    UPDATE = 0
+    SET = 1
+    FROM = 2
+    WHERE = 3
+    RETURNING = 4
+    ORDER_BY = 5
+    LIMIT = 6
+    OFFSET = 7
 
 class QueryClause(Enum):
     SELECT = 0
