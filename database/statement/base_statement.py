@@ -93,7 +93,7 @@ class BaseStatement(ABC):
         values = _convert_values(values)
         return statement, values
 
-    def all(self) -> Any:
+    def all(self, debug: bool = False) -> Any:
         """
         Retrieve all rows from the database table.
 
@@ -101,6 +101,8 @@ class BaseStatement(ABC):
             list[tuple[Any]] | list[Table]: A list of objects representing the rows from the table, or a list of tuples if the return type is not a table.
         """
         statement, values = self._build_statement()
+        if debug:
+            print(statement, values)
         result = self.engine.conn.execute(statement, values).fetchall()
         if self._can_return_table and isinstance(self.result_column, TableMeta):
             return [
