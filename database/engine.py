@@ -1,4 +1,5 @@
 from database.column import Column, SetStatement
+from database.statement.delete import Delete
 from database.statement.query import Query
 from database.statement.update import Update
 from database.utilities import _get_type
@@ -99,3 +100,6 @@ class Engine:
         if not all(isinstance(x, SetStatement) for x in update):
             raise ValueError("All elements in the update list must be of type SetStatement, if you want to replace objects, use engine.replace().")
         return Update(table_or_subquery=list(update), engine=self)
+
+    def delete(self, table: type["Table"]) -> "Delete":
+        return Delete(table_or_subquery=table, engine=self)
