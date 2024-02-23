@@ -44,6 +44,14 @@ class WhereStatement:
     def __repr__(self):
         return f"WHERE {self.statement}, ({', '.join([str(value) for value in self.values])})"
 
+class SetStatement:
+    def __init__(self, statement: str, column: "Column", values: list[Any] = []):
+        self.statement = statement
+        self.column = column
+        self.values = values
+
+    def __repr__(self):
+        return f"(mock:) SET {self.statement}, {self.column.column_name} = {self.values[0]}"
 
 class Column:
     def __init__(self, field: FieldInfo, column_name: str, table_name: str):
@@ -143,6 +151,34 @@ class Column:
             list(other),
         )
 
+    def __add__(self, other: Any) -> SetStatement:
+        if not isinstance(other, self.field.annotation): # type: ignore
+                raise ValueError(
+                    f"Column has type {self.field.annotation}, but you are trying to compare it with {type(other)}"
+                )
+        return SetStatement(f"{self.column_name} = {self.column_name} + ?", self, [other])
+
+    def __sub__(self, other: Any) -> SetStatement:
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(
+                f"Column has type {self.field.annotation}, but you are trying to compare it with {type(other)}"
+            )
+        return SetStatement(f"{self.column_name} = {self.column_name} - ?", self, [other])
+    
+    def __mul__(self, other: Any) -> SetStatement:
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(
+                f"Column has type {self.field.annotation}, but you are trying to compare it with {type(other)}"
+            )
+        return SetStatement(f"{self.column_name} = {self.column_name} * ?", self, [other])
+    
+    def __truediv__(self, other: Any) -> SetStatement:
+        if not isinstance(other, self.field.annotation): # type: ignore
+            raise ValueError(
+                f"Column has type {self.field.annotation}, but you are trying to compare it with {type(other)}"
+            )
+        return SetStatement(f"{self.column_name} = {self.column_name} / ?", self, [other])
+    
 
 class GenericColumn:
     def __init__(self, table: type["Table"]):
