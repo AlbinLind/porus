@@ -1,3 +1,4 @@
+from enum import Enum
 from database.column import Column, WhereStatement
 from database.statement.clause_enums import QueryClause
 from database.table import Table, TableMeta
@@ -17,7 +18,7 @@ class BaseStatement(ABC):
         table_or_subquery: Union[list["Column"], type["Table"]],
         engine: "Engine",
     ):
-        self.statements: list[tuple[str, QueryClause, list[Any] | None]] = []
+        self.statements: list[tuple[str, Enum, list[Any] | None]] = []
         self.engine = engine
         self.select = table_or_subquery
         # We initially assume we can return an object if we are selecting from a table
