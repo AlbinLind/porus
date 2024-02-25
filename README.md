@@ -39,7 +39,7 @@ results = engine.query(User.c.id.count()).where(User.c.some_number >= 100).first
 # We get a tuple with 1 entry (the COUNT(id))
 assert results[0] == 2
 
-# Makes a delete query where we delete
+# Make delete query deleting
 # all rows where `some_numer` is below 125
 # and return the deleted rows
 results = engine.delete(User).where(User.c.some_number < 125).returning().all()
