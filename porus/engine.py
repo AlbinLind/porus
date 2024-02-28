@@ -11,9 +11,10 @@ from porus.utilities import _convert_values, _get_type
 
 
 class Engine:
-    """The Engine class is used to interact with the database. It is used to create tables, insert objects,
-    query objects, and delete them in the database.
+    """The Engine class is used to interact with the database. It is used to create tables, insert
+    objects, query objects, and delete them in the database.
     """
+
     def __init__(self, path: str) -> None:
         """Create a new Engine object."""
         self.path = path
@@ -41,14 +42,14 @@ class Engine:
         self.conn.execute(statement)
         self.conn.commit()
 
-    def push(self, table: type["Table"]):
-            """Pushes a table to the database, and adds it if it does not already exists.
+    def push(self, table: type["Table"]) -> None:
+        """Pushes a table to the database, and adds it if it does not already exists.
 
-            Args:
-                table (type["Table"]): The table to be pushed.
-            """
-            if not self._check_if_table_exists(table):
-                self._create_table(table)
+        Args:
+            table (type["Table"]): The table to be pushed.
+        """
+        if not self._check_if_table_exists(table):
+            self._create_table(table)
 
     def _convert_row_to_object(
         self, table: Union["Table", type["Table"]], row: tuple[Any]
@@ -72,35 +73,35 @@ class Engine:
         )
 
     def insert(self, objs: list["Table"]) -> list[Any]:
-            """Inserts a list of objects into the database.
+        """Inserts a list of objects into the database.
 
-            Args:
-                objs (list["Table"]): The list of objects to be inserted.
+        Args:
+            objs (list["Table"]): The list of objects to be inserted.
 
-            Returns:
-                list[Any]: A list of inserted objects.
-            """
-            row_list = []
-            for obj in objs:
-                keys = []
-                values = []
-                for key, value in obj.model_dump().items():
-                    if obj.model_fields[key].json_schema_extra:  # noqa: SIM102
-                        if (
-                            obj.model_fields[key].json_schema_extra.get("primary_key")  # type: ignore
-                            and not value
-                        ):
-                            continue
-                    keys.append(str(key))
-                    values.append(value)
+        Returns:
+            list[Any]: A list of inserted objects.
+        """
+        row_list = []
+        for obj in objs:
+            keys = []
+            values = []
+            for key, value in obj.model_dump().items():
+                if obj.model_fields[key].json_schema_extra:  # noqa: SIM102
+                    if (
+                        obj.model_fields[key].json_schema_extra.get("primary_key")  # type: ignore
+                        and not value
+                    ):
+                        continue
+                keys.append(str(key))
+                values.append(value)
 
-                statement = f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
-                f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
-                values = _convert_values(values)
-                result = self.conn.execute(statement, values).fetchone()
-                row_list.append(self._convert_row_to_object(obj, result))
-            self.conn.commit()
-            return row_list
+            statement = f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
+            f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
+            values = _convert_values(values)
+            result = self.conn.execute(statement, values).fetchone()
+            row_list.append(self._convert_row_to_object(obj, result))
+        self.conn.commit()
+        return row_list
 
     def query(self, *select: Union["Column", type["Table"]]) -> Query:
         """Executes a query on the database. Chain the query with methods such as where, limit,
@@ -133,33 +134,33 @@ class Engine:
         return Query(table_or_subquery=list(select), engine=self)  # type: ignore
 
     def update(self, *update: SetStatement) -> Update:
-            """Update the records in the table with the specified set statements.
-            This method is the same as the SQL UPDATE statement. If you want to replace
-            objects, use engine.replace().
+        """Update the records in the table with the specified set statements.
+        This method is the same as the SQL UPDATE statement. If you want to replace
+        objects, use engine.replace().
 
-            Args:
-                *update (SetStatement): The set statements to be applied to the records.
+        Args:
+            *update (SetStatement): The set statements to be applied to the records.
 
-            Returns:
-                Update: An Update object representing the update operation.
+        Returns:
+            Update: An Update object representing the update operation.
 
-            Raises:
-                ValueError: If any element in the update list is not of type SetStatement.
-            """
-            if not all(isinstance(x, SetStatement) for x in update):
-                raise ValueError(
-                    "All elements in the update list must be of type SetStatement, if you want to"
-                    "replace objects, use engine.replace()."
-                )
-            return Update(table_or_subquery=list(update), engine=self)
+        Raises:
+            ValueError: If any element in the update list is not of type SetStatement.
+        """
+        if not all(isinstance(x, SetStatement) for x in update):
+            raise ValueError(
+                "All elements in the update list must be of type SetStatement, if you want to"
+                "replace objects, use engine.replace()."
+            )
+        return Update(table_or_subquery=list(update), engine=self)
 
     def delete(self, table: type["Table"]) -> "Delete":
-            """Creates a Delete object for the specified table.
+        """Creates a Delete object for the specified table.
 
-            Args:
-                table (type["Table"]): The table to delete records from.
+        Args:
+            table (type["Table"]): The table to delete records from.
 
-            Returns:
-                Delete: The Delete object for further operations.
-            """
-            return Delete(table_or_subquery=table, engine=self)
+        Returns:
+            Delete: The Delete object for further operations.
+        """
+        return Delete(table_or_subquery=table, engine=self)

@@ -6,6 +6,7 @@ from porus.table import Table
 
 class A(Table):
     """Test table."""
+
     id: int = ColumnField(primary_key=True)
     num: int
     string: str

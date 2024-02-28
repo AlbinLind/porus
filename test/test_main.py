@@ -12,6 +12,7 @@ from porus.table import Table
 
 def test_create_table():
     """Tests creating a table with the porus ORM."""
+
     class A(Table):
         id: int
         something: str
@@ -154,6 +155,7 @@ def test_query_with_multiple_where():
 
 def test_column_query_function_sum():
     """Tests the sum function in a query."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         number: int
@@ -171,6 +173,7 @@ def test_column_query_function_sum():
 
 def test_column_query_function_avg():
     """Tests the avg function in a query."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         number: int
@@ -188,6 +191,7 @@ def test_column_query_function_avg():
 
 def test_column_query_function_max():
     """Tests the max function in a query."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         number: int
@@ -205,6 +209,7 @@ def test_column_query_function_max():
 
 def test_column_query_function_min():
     """Tests the min function in a query."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         number: int
@@ -222,6 +227,7 @@ def test_column_query_function_min():
 
 def test_column_query_function_count():
     """Tests the count function in a query."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         number: int
@@ -356,6 +362,7 @@ def test_COMPLEX_SQL_command():  # noqa: N802
 
 def test_COMPLEX_SQL_command_2():  # noqa: N802
     """Tests the complex SQL command with IN and NOT IN."""
+
     class A(Table):
         id: int = ColumnField(primary_key=True)
         name: str

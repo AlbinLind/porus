@@ -4,7 +4,7 @@ from typing import Any
 
 def _get_type(field: Any) -> str:
     """Returns the SQLite affinity for the given field, if it cannot be inferred,
-    it will be returned as BLOB, which will store it exactly as it is passed, i.e. it's __repr__ or 
+    it will be returned as BLOB, which will store it exactly as it is passed, i.e. it's __repr__ or
     __str__ function.
     """
     if field.__name__ == "int":

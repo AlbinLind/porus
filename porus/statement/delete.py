@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 class Delete(BaseStatement):
     """Delete statement, used to delete rows from a table, just as you would with an SQL DELETE."""
+
     def __init__(
         self,
         *,
@@ -45,27 +46,29 @@ class Delete(BaseStatement):
             raise ValueError("All elements in the returning list must be of type Column.")
         if not all(x.table_name == self.select.table_name for x in columns):  # type: ignore
             raise ValueError("All columns must be from the same table.")
-        self.statements.append((
-            f"RETURNING {', '.join([x.column_name for x in columns])}",
-            DeleteClause.RETURNING,
-            None,
-        ))
+        self.statements.append(
+            (
+                f"RETURNING {', '.join([x.column_name for x in columns])}",
+                DeleteClause.RETURNING,
+                None,
+            )
+        )
         # We are returning columns, so we cannot return a table at this point
         self._can_return_table = False
         return self
 
-    def order_by(self, *columns: Column, ascending: bool = True) -> None: # type: ignore
+    def order_by(self, *columns: Column, ascending: bool = True) -> None:  # type: ignore
         """You cannot use ORDER BY in a DELETE statement."""
         raise InvalidOperationError("You cannot use ORDER BY in a DELETE statement.")
 
-    def limit(self, limit: int) -> None: # type: ignore
+    def limit(self, limit: int) -> None:  # type: ignore
         """You cannot use LIMIT in a DELETE statement."""
         raise InvalidOperationError("You cannot use LIMIT in a DELETE statement.")
 
-    def offset(self, offset: int) -> None: # type: ignore
+    def offset(self, offset: int) -> None:  # type: ignore
         """You cannot use OFFSET in a DELETE statement."""
         raise InvalidOperationError("You cannot use OFFSET in a DELETE statement.")
 
-    def group_by(self, *columns: Column) -> None: # type: ignore
+    def group_by(self, *columns: Column) -> None:  # type: ignore
         """You cannot use GROUP BY in a DELETE statement."""
         raise InvalidOperationError("You cannot use GROUP BY in a DELETE statement.")

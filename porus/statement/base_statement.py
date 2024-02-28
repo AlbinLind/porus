@@ -13,9 +13,13 @@ if TYPE_CHECKING:
 
 
 class BaseStatement(ABC):
-    """Base class from which all statements inherit from. This is an abstract class, so it cannot be instantiated directly, nor should it.
-    Note that a statement will need to implement the _validate_query method, which will be called before the statement is executed.
+    """Base class from which all statements inherit from. This is an abstract class, so it cannot be
+    instantiated directly, nor should it.
+
+    Note that a statement will need to implement the _validate_query method, which will be called
+    before the statement is executed.
     """
+
     def __init__(
         self,
         *,
@@ -36,7 +40,6 @@ class BaseStatement(ABC):
     @abstractmethod
     def _validate_query(self) -> None:
         """Make sure that the query are valid, and that there are no conflicting clauses."""
-        pass
 
     def limit(self, limit: int) -> "BaseStatement":
         """Limit the number of rows returned from the database.
@@ -52,9 +55,9 @@ class BaseStatement(ABC):
 
     def where(self, clause: "WhereStatement") -> "BaseStatement":
         """Add a where clause to the query. This will filter the rows returned from the database.
-        Please note that you will need to surround your column expressions with parenhesis if 
+        Please note that you will need to surround your column expressions with parenhesis if
         you are using the AND or OR operators.
-        
+
         Example:
         >>> engine.query(User).where((User.c.id == 1) & (User.c.age > 25)).first()
         """
@@ -67,11 +70,13 @@ class BaseStatement(ABC):
         """
         if not all(isinstance(x, Column) for x in columns):
             raise ValueError("All elements in the group by list must be of type Column.")
-        self.statements.append((
-            f"GROUP BY {', '.join([x.column_name for x in columns])}",
-            QueryClause.GROUP_BY,
-            None,
-        ))
+        self.statements.append(
+            (
+                f"GROUP BY {', '.join([x.column_name for x in columns])}",
+                QueryClause.GROUP_BY,
+                None,
+            )
+        )
         self._can_return_table = False
         return self
 
@@ -81,11 +86,14 @@ class BaseStatement(ABC):
         """
         if not all(isinstance(x, Column) for x in columns):
             raise ValueError("All elements in the order by list must be of type Column.")
-        self.statements.append((
-            f"ORDER BY {', '.join([x.column_name for x in columns])} {'ASC' if ascending else 'DESC'}",
-            QueryClause.ORDER_BY,
-            None,
-        ))
+        self.statements.append(
+            (
+                f"ORDER BY {', '.join([x.column_name for x in columns])}"
+                f"{'ASC' if ascending else 'DESC'}",
+                QueryClause.ORDER_BY,
+                None,
+            )
+        )
         return self
 
     def _build_statement(self) -> tuple[str, list[Any]]:
@@ -112,7 +120,7 @@ class BaseStatement(ABC):
         """Retrieve all rows from the database table.
 
         Args:
-            debug (bool, optional): If True, the statement and values will be printed to the 
+            debug (bool, optional): If True, the statement and values will be printed to the
             console. Defaults to False.
 
         Returns:
@@ -131,7 +139,7 @@ class BaseStatement(ABC):
         """Retrive the first result from the database table.
 
         Args:
-            debug (bool, optional): If True, the statement and values will be printed to the 
+            debug (bool, optional): If True, the statement and values will be printed to the
             console. Defaults to False.
 
         Returns:

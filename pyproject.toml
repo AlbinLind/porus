@@ -41,7 +41,6 @@ lint.select = [
     "RET",
     "SIM",
     "TID",
-    "PD",
     "PL",
     "PERF",
     "FURB",

@@ -15,6 +15,7 @@ class Update(BaseStatement):
     """Update statement, used to update rows in a table, just as you would with an SQL UPDATE
     statement.
     """
+
     def __init__(
         self,
         *,
@@ -25,7 +26,8 @@ class Update(BaseStatement):
         super().__init__(table_or_subquery=[t.column for t in table_or_subquery], engine=engine)
         if isinstance(table_or_subquery, Table):
             raise ValueError(
-                "You cannot update a table directly. You must use column(s). If you want to replace a row, use engine.replace()"
+                "You cannot update a table directly. You must use column(s). If you want to replace"
+                "a row, use engine.replace()"
             )
         self.table_name = table_or_subquery[0].column.table_name
         self.set_statements = table_or_subquery
@@ -70,9 +72,11 @@ class Update(BaseStatement):
             raise ValueError("All elements in the returning list must be of type Column.")
         if not all(x.table_name == self.table_name for x in columns):
             raise ValueError("All columns must be from the same table.")
-        self.statements.append((
-            f"RETURNING {', '.join([c.column_name for c in columns])}",
-            UpdateClause.RETURNING,
-            None,
-        ))
+        self.statements.append(
+            (
+                f"RETURNING {', '.join([c.column_name for c in columns])}",
+                UpdateClause.RETURNING,
+                None,
+            )
+        )
         return self

@@ -2,7 +2,7 @@
 from typing import Any
 
 from pydantic import BaseModel
-from pydantic._internal._model_construction import ModelMetaclass
+from pydantic._internal._model_construction import ModelMetaclass  # noqa: PLC2701
 
 from porus.column import GenericColumn
 
@@ -11,9 +11,10 @@ class TableMeta(ModelMetaclass):
     """Meta class for the Table class. This class is used so that we can get the "column"
     attribute from the table class, which is actually a pydantic model.
     """
-    def __getattr__(self, name: str)-> Any:
+
+    def __getattr__(self, name: str) -> Any:
         """Gets a column attribute."""
-        if name in ("_", "c"):
+        if name in {"_", "c"}:
             return GenericColumn(self)
         return super().__getattr__(name)  # type: ignore
 
@@ -40,7 +41,7 @@ class Table(BaseModel, metaclass=TableMeta):
 
     def __init_subclass__(cls) -> None:
         """Function that runs after a subclass is created. This function sets the table_name."""
-        cls.table_name = cls.__name__.lower() # type: ignore
+        cls.table_name = cls.__name__.lower()  # type: ignore
 
     @property
     def table_name(self) -> str:

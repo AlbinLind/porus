@@ -6,6 +6,7 @@ from porus.table import Table
 
 class A(Table):
     """Test table for the delete tests."""
+
     id: int = ColumnField(primary_key=True)
     num: int
     string: str
@@ -50,6 +51,7 @@ def test_delete_returning():
     res = engine.query(A.c.id).all()
     assert res == [(b.id,)]
 
+
 def test_delete_returning_object():
     """Tests deleting a row and returning the object that was deleted."""
     engine = Engine(":memory:")
@@ -62,6 +64,7 @@ def test_delete_returning_object():
     assert res == [a]
     res = engine.query(A).all()
     assert res == [b]
+
 
 def test_delete_complex_where():
     """Tests deleting with a more complex where clause."""

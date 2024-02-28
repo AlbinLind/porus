@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class ColumnFunction(Enum):
     """Enum for the different functions that can be applied to a column."""
+
     COUNT = "COUNT"
     MAX = "MAX"
     MIN = "MIN"
@@ -18,7 +19,7 @@ class ColumnFunction(Enum):
     AVG = "AVG"
 
 
-def ColumnField(default: Any = None, *, primary_key: bool = False, **kwargs) -> Any:  # noqa: N802
+def ColumnField(default: Any = None, *, primary_key: bool = False, **kwargs) -> Any:  # noqa: ANN003, N802
     """A wrapper function for pydantic's Field, which adds a primary_key parameter to the
     json_schema_extra parameter.
     """
@@ -27,6 +28,7 @@ def ColumnField(default: Any = None, *, primary_key: bool = False, **kwargs) -> 
 
 class WhereStatement:
     """Represents a where statement in SQL. This class is used to create where statements."""
+
     def __init__(self, statement: str, values: Optional[list[Any]] = None) -> None:
         """Create a new WhereStatement object."""
         if values is None:
@@ -35,12 +37,12 @@ class WhereStatement:
         self.values = values
 
     def __and__(self, other: "WhereStatement") -> "WhereStatement":
-            """Combines the current WhereStatement with another WhereStatement using the
-            logical AND operator.
-            """
-            self.statement = f"({self.statement} AND {other.statement})"
-            self.values.extend(other.values)
-            return self
+        """Combines the current WhereStatement with another WhereStatement using the
+        logical AND operator.
+        """
+        self.statement = f"({self.statement} AND {other.statement})"
+        self.values.extend(other.values)
+        return self
 
     def __or__(self, other: "WhereStatement") -> "WhereStatement":
         """Combines the current WhereStatement with another WhereStatement using the
@@ -57,6 +59,7 @@ class WhereStatement:
 
 class SetStatement:
     """Represents a set statement in SQL. This class is used to create set statements."""
+
     def __init__(self, statement: str, column: "Column", values: list[Any] | None = None) -> None:
         """Create a new SetStatement object."""
         if values is None:
@@ -74,6 +77,7 @@ class Column:
     """Column of a table. This class is used to create SQL statements with the Table.c.column name
     syntax.
     """
+
     def __init__(self, field: FieldInfo, column_name: str, table_name: str) -> None:
         """Initialize a new Column object."""
         self.field: FieldInfo = field
@@ -112,7 +116,7 @@ class Column:
         self._function_applied = ColumnFunction.AVG
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of the Column object. This is used for debugging."""
         return f"Column(type={self.field.annotation})"
 
@@ -124,6 +128,10 @@ class Column:
                 f"but you are comparing it to a {type(other)}"
             )
         return WhereStatement(f"{self.column_name} = ?", [other])
+
+    def __hash__(self) -> int:
+        """Hash the column."""
+        return hash(self.column_name)
 
     def __ne__(self, other: Any) -> WhereStatement:  # type: ignore
         """Create a where statement for the not equal operator."""
@@ -232,10 +240,12 @@ class Column:
 
 
 class GenericColumn:
-    """Generic column class. This class is used as the "intermediary" between the Table and its actually column.
-    This class represents the .c (or ._) attribute of the Table class. Once you access a column from the Table.c,
-    you will get the true Column object that you should use to create queries etc.
+    """Generic column class. This class is used as the "intermediary" between the Table and its
+    actually column.
+    This class represents the .c (or ._) attribute of the Table class. Once you access a column
+    from the Table.c, you will get the true Column object that you should use to create queries etc.
     """
+
     def __init__(self, table: type["Table"]) -> None:
         """Create a new GenericColumn object."""
         self.table = table
