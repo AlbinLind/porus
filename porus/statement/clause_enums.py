@@ -1,7 +1,9 @@
+"""Enums for the different clauses in SQL statements."""
 from enum import Enum
 
 
 class DeleteClause(Enum):
+    """Enum for the different clauses in a DELETE statement."""
     DELETE = 0
     WHERE = 1
     RETURNING = 2
@@ -13,6 +15,7 @@ class DeleteClause(Enum):
 
 
 class UpdateClause(Enum):
+    """Enum for the different clauses in an UPDATE statement."""
     UPDATE = 0
     SET = 1
     FROM = 2
@@ -24,6 +27,7 @@ class UpdateClause(Enum):
 
 
 class QueryClause(Enum):
+    """Enum for the different clauses in a SELECT statement."""
     SELECT = 0
     FROM = 1
     WHERE = 2
