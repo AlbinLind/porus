@@ -51,5 +51,5 @@ assert results[0].name == "foo"
 # Features to Add
 * Relationships and join
 * Like (string search)
-* Replace function for updating existing object with the new object
+* ~~Replace function for updating existing object with the new object~~
 * Migrations
