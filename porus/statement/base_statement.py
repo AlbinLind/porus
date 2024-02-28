@@ -88,8 +88,10 @@ class BaseStatement(ABC):
             raise ValueError("All elements in the order by list must be of type Column.")
         self.statements.append(
             (
-                f"ORDER BY {', '.join([x.column_name for x in columns])}"
-                f"{'ASC' if ascending else 'DESC'}",
+                (
+                    f"ORDER BY {', '.join([x.column_name for x in columns])} "
+                    f"{'ASC' if ascending else 'DESC'}"
+                ),
                 QueryClause.ORDER_BY,
                 None,
             )
