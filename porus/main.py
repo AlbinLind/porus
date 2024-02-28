@@ -1,17 +1,19 @@
+"""Porus is a simple ORM for SQLite3."""
 from typing import Any
 
 from porus.column import ColumnField
-
 from porus.engine import Engine
 from porus.table import Table
 
 
 class User(Table):
+    """Test table."""
     id: int = ColumnField(primary_key=True)
     name: str
 
 
-def remove_database():
+def remove_database() -> None:
+    """Helper function to remove an existing database."""
     import os
 
     os.remove("test.db")
