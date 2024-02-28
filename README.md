@@ -2,7 +2,9 @@
 I will use this project to learn how to build my own `ORM` (Object-Relational Mapping) for `SQLite`, or at least my take on it. The project will not use any other database than `SQLite`, simply because if I need capabilities beyond what `SQLite` can offer, I better go with a robust system, such as `SQLAlchemy`. At a later stage introducing `rust` as the backend could significantly increase the speed of the library (c.f. [this blog post](https://avi.im/blag/2021/fast-sqlite-inserts/)).
 
 # Installation
-Clone the repository and import and see the simple example for basic usage. (I don't think so, but in the future it might get added to pypi)
+Clone the repository and import and see the simple example for basic usage. The only dependency is pydantic. 
+
+(Although I don't think so, but in the future it might get added to pypi)
 
 # Simple Example
 ```python
