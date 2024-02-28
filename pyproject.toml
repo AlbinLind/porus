@@ -17,3 +17,59 @@ pytest = "^8.0.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+lint.select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "N",
+    "D",
+    "UP",
+    "ANN",
+    "B",
+    "A",
+    "COM",
+    "C4",
+    "ICN",
+    "PIE",
+    "T20",
+    "PT",
+    "Q",
+    "RET",
+    "SIM",
+    "TID",
+    "PD",
+    "PL",
+    "PERF",
+    "FURB",
+    "RUF",
+]
+lint.ignore = [
+    "D401",
+    "D203",
+    "D213",
+    "D205",
+    "D400",
+    "ANN101",
+    "ANN401",
+    "B008",
+    "SIM222",
+    "RUF100",
+    "PLR6301",
+    "PLR0913",
+    "ANN102",
+    "COM812"
+]
+lint.unfixable = ["F401"]
+
+line-length = 100
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"**/test/**" = ["ANN201", "PLR2004"]
