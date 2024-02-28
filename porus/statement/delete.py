@@ -52,6 +52,8 @@ class Delete(BaseStatement):
                 None,
             )
         )
+        # We are returning columns, so we cannot return a table at this point
+        self._can_return_table = False
         return self
 
     def order_by(self, *columns: Column, ascending: bool = True):
