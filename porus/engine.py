@@ -95,8 +95,10 @@ class Engine:
                 keys.append(str(key))
                 values.append(value)
 
-            statement = (f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
-            f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;")
+            statement = (
+                f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
+                f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
+            )
             values = _convert_values(values)
             result = self.conn.execute(statement, values).fetchone()
             row_list.append(self._convert_row_to_object(obj, result))
@@ -181,8 +183,9 @@ class Engine:
         if not all(isinstance(x, Table) for x in objs):
             raise ValueError("All elements in the objs list must be of type Table.")
         if not all("id" in obj.__annotations__ for obj in objs):
-            raise ValueError("All objects must have a primary key called id"
-                             "when using engine.replace().")
+            raise ValueError(
+                "All objects must have a primary key called id" "when using engine.replace()."
+            )
         # Delete the old rows
         for obj in objs:
             self.delete(obj.__class__).where(obj.__class__.c.id == obj.id).all()

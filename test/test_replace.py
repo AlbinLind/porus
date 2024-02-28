@@ -1,13 +1,16 @@
 """Tests for the replace method on the engine."""
+from porus.column import ColumnField
 from porus.engine import Engine
 from porus.table import Table
-from porus.column import ColumnField
+
 
 class TestTable(Table):
     """A test table."""
+
     id: int = ColumnField(primary_key=True)
     column_one: str
     column_two: int
+
 
 def test_replacing_one():
     """Tests replacing one row in the table."""
@@ -26,6 +29,7 @@ def test_replacing_one():
     assert in_db_obj_a[0].column_one == "Once upon a time"
     assert in_db_obj_a[0].column_two == 42
     assert in_db_obj_a[0].id == obj_a_inital_id
+
 
 def test_replacing_many():
     """Tests replacing many rows in the table."""
