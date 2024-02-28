@@ -95,8 +95,8 @@ class Engine:
                 keys.append(str(key))
                 values.append(value)
 
-            statement = f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
-            f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;"
+            statement = (f"INSERT INTO {obj.table_name} ({', '.join(keys)}) VALUES "
+            f"({', '.join(['?' for _ in range(len(values))])}) RETURNING *;")
             values = _convert_values(values)
             result = self.conn.execute(statement, values).fetchone()
             row_list.append(self._convert_row_to_object(obj, result))
@@ -164,3 +164,27 @@ class Engine:
             Delete: The Delete object for further operations.
         """
         return Delete(table_or_subquery=table, engine=self)
+
+    def replace(self, *objs: "Table") -> list["Table"]:
+        """Replaces the rows in the database with the specified objects.
+        Not that this method requires that the objects have a primary key called id.
+
+        Args:
+            *objs (Table): The objects to replace the rows with.
+
+        Returns:
+            list[Table]: A list of replaced objects.
+
+        Raises:
+            ValueError: If any element in the objs list is not of type Table.
+        """
+        if not all(isinstance(x, Table) for x in objs):
+            raise ValueError("All elements in the objs list must be of type Table.")
+        if not all("id" in obj.__annotations__ for obj in objs):
+            raise ValueError("All objects must have a primary key called id"
+                             "when using engine.replace().")
+        # Delete the old rows
+        for obj in objs:
+            self.delete(obj.__class__).where(obj.__class__.c.id == obj.id).all()
+        # Insert the new rows
+        return self.insert(objs)

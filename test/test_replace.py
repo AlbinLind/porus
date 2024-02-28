@@ -21,7 +21,7 @@ def test_replacing_one():
     obj_a_inital_id = obj_a.id
     obj_a.column_one = "Once upon a time"
 
-    obj_a = engine.replace(obj_a).all()
+    obj_a = engine.replace(obj_a)
     in_db_obj_a = engine.query(TestTable).where(TestTable.c.id == obj_a_inital_id).all()
     assert in_db_obj_a[0].column_one == "Once upon a time"
     assert in_db_obj_a[0].column_two == 42
@@ -41,7 +41,7 @@ def test_replacing_many():
     obj_a.column_one = "Once upon a time"
     obj_b.column_two = 123
 
-    obj_a, obj_b = engine.replace([obj_a, obj_b]).all()
+    obj_a, obj_b = engine.replace(obj_a, obj_b)
     in_db_obj_a = engine.query(TestTable).where(TestTable.c.id == obj_a_inital_id).all()
     in_db_obj_b = engine.query(TestTable).where(TestTable.c.id == obj_b_inital_id).all()
     assert in_db_obj_a[0].column_one == "Once upon a time"
