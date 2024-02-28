@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING
-from database.column import Column
-from database.statement.base_statement import BaseStatement
-from database.table import Table
-from database.statement.clause_enums import UpdateClause
+from porus.column import Column
+from porus.statement.base_statement import BaseStatement
+from porus.table import Table
+from porus.statement.clause_enums import UpdateClause
 
 if TYPE_CHECKING:
-    from database.engine import Engine
-    from database.column import SetStatement
+    from porus.engine import Engine
+    from porus.column import SetStatement
 
 class Update(BaseStatement):
     def __init__(

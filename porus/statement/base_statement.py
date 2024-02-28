@@ -1,15 +1,15 @@
 from enum import Enum
-from database.column import Column, WhereStatement
-from database.statement.clause_enums import QueryClause
-from database.table import Table, TableMeta
-from database.utilities import _convert_values
+from porus.column import Column, WhereStatement
+from porus.statement.clause_enums import QueryClause
+from porus.table import Table, TableMeta
+from porus.utilities import _convert_values
 
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Union
 
 if TYPE_CHECKING:
-    from database.engine import Engine
+    from porus.engine import Engine
 
 class BaseStatement(ABC):
     def __init__(

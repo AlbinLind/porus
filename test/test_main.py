@@ -1,9 +1,9 @@
 from pydantic import ValidationError
 import pytest
-from database.column import ColumnField
-from database.engine import Engine
-from database.table import Table
-from database.main import User
+from porus.column import ColumnField
+from porus.engine import Engine
+from porus.table import Table
+from porus.main import User
 
 
 def test_create_table():

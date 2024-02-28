@@ -1,6 +1,6 @@
-from database.column import ColumnField
-from database.table import Table
-from database.engine import Engine
+from porus.column import ColumnField
+from porus.table import Table
+from porus.engine import Engine
 
 
 class A(Table):

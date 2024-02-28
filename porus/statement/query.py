@@ -1,13 +1,13 @@
-from database.statement.clause_enums import QueryClause
-from database.statement.base_statement import BaseStatement
-from database.column import Column
-from database.table import Table, TableMeta
+from porus.statement.clause_enums import QueryClause
+from porus.statement.base_statement import BaseStatement
+from porus.column import Column
+from porus.table import Table, TableMeta
 
 
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from database.engine import Engine
+    from porus.engine import Engine
 
 
 class Query(BaseStatement):

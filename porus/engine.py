@@ -1,10 +1,10 @@
-from database.column import Column, SetStatement
-from database.statement.delete import Delete
-from database.statement.query import Query
-from database.statement.update import Update
-from database.utilities import _get_type
-from database.utilities import _convert_values
-from database.table import Table
+from porus.column import Column, SetStatement
+from porus.statement.delete import Delete
+from porus.statement.query import Query
+from porus.statement.update import Update
+from porus.utilities import _get_type
+from porus.utilities import _convert_values
+from porus.table import Table
 
 
 import sqlite3

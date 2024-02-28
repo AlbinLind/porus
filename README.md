@@ -6,7 +6,7 @@ Clone the repository and import and see the simple example for basic usage. (I d
 
 # Simple Example
 ```python
-from database import Table, Engine, ColumnField
+from porus import Table, Engine, ColumnField
 
 class User(Table):
     id: int = ColumnField(primary_key = True)

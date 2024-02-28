@@ -8,7 +8,7 @@ from pydantic.fields import FieldInfo
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from database.table import Table
+    from porus.table import Table
 
 
 class ColumnFunction(Enum):

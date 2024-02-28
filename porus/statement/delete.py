@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
-from database.column import Column
-from database.errors.clause_errors import InvalidOperationError
-from database.statement.base_statement import BaseStatement
-from database.statement.clause_enums import DeleteClause
-from database.table import Table, TableMeta
+from porus.column import Column
+from porus.errors.clause_errors import InvalidOperationError
+from porus.statement.base_statement import BaseStatement
+from porus.statement.clause_enums import DeleteClause
+from porus.table import Table, TableMeta
 
 if TYPE_CHECKING:
-    from database.engine import Engine
-    from database.column import Column
+    from porus.engine import Engine
+    from porus.column import Column
 
 
 class Delete(BaseStatement):

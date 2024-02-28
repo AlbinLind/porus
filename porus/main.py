@@ -1,9 +1,9 @@
 from typing import Any
 
-from database.column import ColumnField
+from porus.column import ColumnField
 
-from database.engine import Engine
-from database.table import Table
+from porus.engine import Engine
+from porus.table import Table
 
 
 class User(Table):

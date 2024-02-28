@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from database.column import GenericColumn
+from porus.column import GenericColumn
 from pydantic._internal._model_construction import ModelMetaclass
 
 

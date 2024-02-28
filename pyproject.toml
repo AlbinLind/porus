@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "database"
+name = "porus"
 version = "0.1.0"
 description = ""
 authors = ["AlbinLind <albin.lindqvist@hotmail.se>"]
@@ -12,7 +12,6 @@ pydantic = "^2.6.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.2.2"
-black = "^24.2.0"
 pytest = "^8.0.1"
 
 [build-system]
