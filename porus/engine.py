@@ -8,7 +8,7 @@ from porus.table import Table
 
 
 import sqlite3
-from typing import  Any, Union
+from typing import Any, Union
 
 
 class Engine:
@@ -27,9 +27,7 @@ class Engine:
         statement = f"CREATE TABLE {table.table_name}"
         columns = []
         for field in table.model_fields:
-            column_statement = (
-                f"{field} {_get_type(table.model_fields[field].annotation)}"
-            )
+            column_statement = f"{field} {_get_type(table.model_fields[field].annotation)}"
             if table.model_fields[field].json_schema_extra:
                 if table.model_fields[field].json_schema_extra.get("primary_key"):  # type: ignore
                     column_statement += " PRIMARY KEY"
@@ -98,7 +96,9 @@ class Engine:
 
     def update(self, *update: SetStatement) -> Update:
         if not all(isinstance(x, SetStatement) for x in update):
-            raise ValueError("All elements in the update list must be of type SetStatement, if you want to replace objects, use engine.replace().")
+            raise ValueError(
+                "All elements in the update list must be of type SetStatement, if you want to replace objects, use engine.replace()."
+            )
         return Update(table_or_subquery=list(update), engine=self)
 
     def delete(self, table: type["Table"]) -> "Delete":

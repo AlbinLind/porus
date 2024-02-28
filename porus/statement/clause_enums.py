@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class DeleteClause(Enum):
     DELETE = 0
     WHERE = 1
@@ -10,6 +11,7 @@ class DeleteClause(Enum):
     # LIMIT = 4
     # OFFSET = 5
 
+
 class UpdateClause(Enum):
     UPDATE = 0
     SET = 1
@@ -19,6 +21,7 @@ class UpdateClause(Enum):
     ORDER_BY = 5
     LIMIT = 6
     OFFSET = 7
+
 
 class QueryClause(Enum):
     SELECT = 0

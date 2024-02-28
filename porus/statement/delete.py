@@ -22,12 +22,8 @@ class Delete(BaseStatement):
 
     def _delete_table(self):
         if not isinstance(self.select, TableMeta):
-            raise ValueError(
-                "You cannot delete from a subquery. You must provide a table."
-            )
-        self.statements.append(
-            (f"DELETE FROM {self.select.table_name}", DeleteClause.DELETE, None)
-        )
+            raise ValueError("You cannot delete from a subquery. You must provide a table.")
+        self.statements.append((f"DELETE FROM {self.select.table_name}", DeleteClause.DELETE, None))
         return self
 
     def _validate_query(self):
@@ -40,18 +36,14 @@ class Delete(BaseStatement):
             self.statements.append(("RETURNING *", DeleteClause.RETURNING, None))
             return self
         if not all(isinstance(x, Column) for x in columns):
-            raise ValueError(
-                "All elements in the returning list must be of type Column."
-            )
+            raise ValueError("All elements in the returning list must be of type Column.")
         if not all(x.table_name == self.select.table_name for x in columns):  # type: ignore
             raise ValueError("All columns must be from the same table.")
-        self.statements.append(
-            (
-                f"RETURNING {', '.join([x.column_name for x in columns])}",
-                DeleteClause.RETURNING,
-                None,
-            )
-        )
+        self.statements.append((
+            f"RETURNING {', '.join([x.column_name for x in columns])}",
+            DeleteClause.RETURNING,
+            None,
+        ))
         # We are returning columns, so we cannot return a table at this point
         self._can_return_table = False
         return self

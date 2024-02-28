@@ -2,10 +2,12 @@ from porus.column import ColumnField
 from porus.table import Table
 from porus.engine import Engine
 
+
 class A(Table):
     id: int = ColumnField(primary_key=True)
     num: int
     string: str
+
 
 # def test_update_literal():
 #     engine = Engine(":memory:")
@@ -20,6 +22,7 @@ class A(Table):
 #     assert res[0][0] == 2
 #     assert res[1][0] == 2
 
+
 def test_update_addition():
     engine = Engine(":memory:")
     engine.push(A)
@@ -32,6 +35,7 @@ def test_update_addition():
     res = engine.query(A.c.num).all()
     assert res[0][0] == 2
     assert res[1][0] == 2
+
 
 def test_update_subtraction():
     engine = Engine(":memory:")
@@ -46,6 +50,7 @@ def test_update_subtraction():
     assert res[0][0] == 0
     assert res[1][0] == 2
 
+
 def test_update_multiplication():
     engine = Engine(":memory:")
     engine.push(A)
@@ -59,12 +64,15 @@ def test_update_multiplication():
     assert res[0][0] == 2
     assert res[1][0] == 2
 
+
 def test_update_division():
     engine = Engine(":memory:")
+
     class B(Table):
         id: int = ColumnField(primary_key=True)
         num: float
         string: str
+
     engine.push(B)
     a = B(num=1, string="test")
     b = B(num=2, string="test2")
@@ -75,6 +83,7 @@ def test_update_division():
     res = engine.query(B.c.num).all()
     assert res[0][0] == 0.5
     assert res[1][0] == 2
+
 
 # def test_update_user_function():
 #     def my_func(a: A) -> A:

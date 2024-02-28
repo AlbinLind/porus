@@ -25,4 +25,3 @@ if __name__ == "__main__":
     engine.insert([usr1])
     res: list[Any] = engine.query(User.c.name).all()
     usr1.name = "smt2"
-

@@ -37,13 +37,11 @@ class Query(BaseStatement):
         if not all(x.table_name == table_name for x in self.select):
             raise ValueError("All columns must be from the same table.")
         self.statements.append((f"FROM {table_name}", QueryClause.FROM, None))
-        self.statements.append(
-            (
-                f"SELECT {', '.join([x.get_query() for x in self.select])}",
-                QueryClause.SELECT,
-                None,
-            )
-        )
+        self.statements.append((
+            f"SELECT {', '.join([x.get_query() for x in self.select])}",
+            QueryClause.SELECT,
+            None,
+        ))
         return self
 
     def _validate_query(self):

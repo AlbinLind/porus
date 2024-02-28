@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Union
 if TYPE_CHECKING:
     from porus.engine import Engine
 
+
 class BaseStatement(ABC):
     def __init__(
         self,
@@ -41,38 +42,28 @@ class BaseStatement(ABC):
         return self
 
     def where(self, clause: "WhereStatement"):
-        self.statements.append(
-            (f"WHERE {clause.statement}", QueryClause.WHERE, clause.values)
-        )
+        self.statements.append((f"WHERE {clause.statement}", QueryClause.WHERE, clause.values))
         return self
 
     def group_by(self, *columns: "Column"):
         if not all(isinstance(x, Column) for x in columns):
-            raise ValueError(
-                "All elements in the group by list must be of type Column."
-            )
-        self.statements.append(
-            (
-                f"GROUP BY {', '.join([x.column_name for x in columns])}",
-                QueryClause.GROUP_BY,
-                None,
-            )
-        )
+            raise ValueError("All elements in the group by list must be of type Column.")
+        self.statements.append((
+            f"GROUP BY {', '.join([x.column_name for x in columns])}",
+            QueryClause.GROUP_BY,
+            None,
+        ))
         self._can_return_table = False
         return self
 
     def order_by(self, *columns: "Column", ascending: bool = True):
         if not all(isinstance(x, Column) for x in columns):
-            raise ValueError(
-                "All elements in the order by list must be of type Column."
-            )
-        self.statements.append(
-            (
-                f"ORDER BY {', '.join([x.column_name for x in columns])} {'ASC' if ascending else 'DESC'}",
-                QueryClause.ORDER_BY,
-                None,
-            )
-        )
+            raise ValueError("All elements in the order by list must be of type Column.")
+        self.statements.append((
+            f"ORDER BY {', '.join([x.column_name for x in columns])} {'ASC' if ascending else 'DESC'}",
+            QueryClause.ORDER_BY,
+            None,
+        ))
         return self
 
     def _build_statement(self) -> tuple[str, list[Any]]:
@@ -105,10 +96,7 @@ class BaseStatement(ABC):
             print(statement, values)
         result = self.engine.conn.execute(statement, values).fetchall()
         if self._can_return_table and isinstance(self.result_column, TableMeta):
-            return [
-                self.engine._convert_row_to_object(self.result_column, row)
-                for row in result
-            ]
+            return [self.engine._convert_row_to_object(self.result_column, row) for row in result]
         return result
 
     def first(self, debug: bool = False) -> Any:
