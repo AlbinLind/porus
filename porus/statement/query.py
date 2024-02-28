@@ -1,34 +1,38 @@
-from porus.statement.clause_enums import QueryClause
-from porus.statement.base_statement import BaseStatement
-from porus.column import Column
-from porus.table import Table, TableMeta
-
-
+"""Query class that is used to create a query statement."""
 from typing import TYPE_CHECKING, Union
+
+from porus.column import Column
+from porus.statement.base_statement import BaseStatement
+from porus.statement.clause_enums import QueryClause
+from porus.table import Table, TableMeta
 
 if TYPE_CHECKING:
     from porus.engine import Engine
 
 
 class Query(BaseStatement):
+    """Query class that is used to create a query statement."""
     def __init__(
         self,
         *,
         table_or_subquery: Union[list["Column"], type["Table"]],
         engine: "Engine",
-    ):
+    ) -> None:
+        """Create a new Query object. The object is used to create a query statement."""
         super().__init__(table_or_subquery=table_or_subquery, engine=engine)
         if isinstance(table_or_subquery, TableMeta):
             self._select_table(str(table_or_subquery.table_name))
         else:
             self._select_columns()
 
-    def _select_table(self, table_name: str):
+    def _select_table(self, table_name: str) -> "Query":
+        """Create the SELECT and FROM clauses if we are querying a table."""
         self.statements.append(("SELECT *", QueryClause.SELECT, None))
         self.statements.append((f"FROM {table_name}", QueryClause.FROM, None))
         return self
 
-    def _select_columns(self):
+    def _select_columns(self) -> "Query":
+        """Create the SELECT and FROM clauses if we are querying columns."""
         if not self.select:
             raise ValueError("You must provide at least one column to select.")
         if not isinstance(self.select, list):
@@ -44,10 +48,12 @@ class Query(BaseStatement):
         ))
         return self
 
-    def _validate_query(self):
+    def _validate_query(self) -> None:
         """Make sure that the query are valid, and that there are no conflicting clauses.
         The function will try and fix the query if possible.
-        For example if the query contains an OFFSET clause, but no LIMIT clause, it will set the LIMIT as -1"""
+        For example if the query contains an OFFSET clause, but no LIMIT clause, it will set the
+        LIMIT as -1.
+        """
         clauses = [x[1] for x in self.statements]
         if QueryClause.SELECT not in clauses:
             raise ValueError(
