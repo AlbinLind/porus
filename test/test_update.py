@@ -1,9 +1,11 @@
+"""Tests the update method for porus ORM."""
 from porus.column import ColumnField
-from porus.table import Table
 from porus.engine import Engine
+from porus.table import Table
 
 
 class A(Table):
+    """Test table."""
     id: int = ColumnField(primary_key=True)
     num: int
     string: str
@@ -24,6 +26,7 @@ class A(Table):
 
 
 def test_update_addition():
+    """Tests updating a column with an addition operation."""
     engine = Engine(":memory:")
     engine.push(A)
     a = A(num=1, string="test")
@@ -38,6 +41,7 @@ def test_update_addition():
 
 
 def test_update_subtraction():
+    """Tests updating a column with a subtraction operation."""
     engine = Engine(":memory:")
     engine.push(A)
     a = A(num=1, string="test")
@@ -52,6 +56,7 @@ def test_update_subtraction():
 
 
 def test_update_multiplication():
+    """Tests updating a column with a multiplication operation."""
     engine = Engine(":memory:")
     engine.push(A)
     a = A(num=1, string="test")
@@ -66,6 +71,7 @@ def test_update_multiplication():
 
 
 def test_update_division():
+    """Tests updating a column with a division operation."""
     engine = Engine(":memory:")
 
     class B(Table):
