@@ -76,4 +76,4 @@ def test_delete_complex_where():
 
     res = engine.delete(A).where((A.c.id == a.id) | (A.c.num == 2)).all()
     res = engine.query(A.c.id).all()
-    assert res == []
+    assert len(res) == 0
