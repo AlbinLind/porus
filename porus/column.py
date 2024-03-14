@@ -1,11 +1,12 @@
 """Module for the Column class and the ColumnField function."""
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from pydantic import Field
 from pydantic.fields import FieldInfo
 
 if TYPE_CHECKING:
+    from porus.column import Column
     from porus.table import Table
 
 
@@ -19,11 +20,20 @@ class ColumnFunction(Enum):
     AVG = "AVG"
 
 
-def ColumnField(default: Any = None, *, primary_key: bool = False, **kwargs) -> Any:  # noqa: ANN003, N802
+def ColumnField( # noqa: N802
+    default: Any = None,
+    *,
+    primary_key: bool = False,
+    foreign_key: Union["Column", None] = None,
+    **kwargs,# noqa: ANN003
+) -> Any:
     """A wrapper function for pydantic's Field, which adds a primary_key parameter to the
     json_schema_extra parameter.
     """
-    return Field(default=default, json_schema_extra={"primary_key": primary_key}, **kwargs)
+    extra_schema: dict[str, Any] = {"primary_key": primary_key}
+    if foreign_key:
+        extra_schema["foreign_key"] = foreign_key
+    return Field(default=default, json_schema_extra=extra_schema, **kwargs)
 
 
 class WhereStatement:
