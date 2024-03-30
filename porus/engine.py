@@ -21,8 +21,10 @@ class Engine:
         self.conn = sqlite3.connect(self.path)
 
     def _check_if_table_exists(self, table: type["Table"]) -> bool:
-        statement = "SELECT name FROM sqlite_master WHERE type='table' "
-        f"AND name='{table.__name__.lower()}';"
+        statement = (
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            f"AND name='{table.__name__.lower()}';"
+        )
         result = self.conn.execute(statement).fetchone()
         if result:
             return True
@@ -37,6 +39,11 @@ class Engine:
             if table.model_fields[field].json_schema_extra:  # noqa: SIM102
                 if table.model_fields[field].json_schema_extra.get("primary_key"):  # type: ignore
                     column_statement += " PRIMARY KEY"
+                if fk := table.model_fields[field].json_schema_extra.get("foreign_key"):  # type: ignore
+                    fk: Column
+                    column_statement += (
+                        f", FOREIGN KEY({field}) REFERENCES {fk.table_name}({fk.column_name})"
+                    )
             columns.append(column_statement)
         statement += f"({', '.join(columns)})"
         self.conn.execute(statement)
@@ -169,7 +176,7 @@ class Engine:
 
     def replace(self, *objs: "Table") -> list["Table"]:
         """Replaces the rows in the database with the specified objects.
-        Not that this method requires that the objects have a primary key called id.
+        Note that this method requires that the objects have a primary key called id.
 
         Args:
             *objs (Table): The objects to replace the rows with.
@@ -190,4 +197,4 @@ class Engine:
         for obj in objs:
             self.delete(obj.__class__).where(obj.__class__.c.id == obj.id).all()
         # Insert the new rows
-        return self.insert(objs)
+        return self.insert(list(objs))
