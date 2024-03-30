@@ -7,13 +7,19 @@ from porus import ColumnField, Engine, Table
 
 
 class Artist(Table):
+    """Test table."""
+
     id: int = ColumnField(primary_key=True)
     name: str
 
+
 class Album(Table):
+    """Test table."""
+
     id: int = ColumnField(primary_key=True)
     title: str
     artist_id: int = ColumnField(foreign_key=Artist.c.id)
+
 
 def test_relationship_creation():
     """Test that a foreign key constraint is created when a table is pushed to the database."""
@@ -33,6 +39,7 @@ def test_relationship_creation():
     assert len(res) == 1
     assert res[0].title == "Fizz"
 
+
 def test_relationship_not_exists():
     """Test that a foreign key constraint is enforced."""
     engine = Engine(":memory:")
@@ -47,4 +54,3 @@ def test_relationship_not_exists():
 
     with pytest.raises(sqlite3.IntegrityError):
         engine.insert([album1])
-

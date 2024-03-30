@@ -20,12 +20,12 @@ class ColumnFunction(Enum):
     AVG = "AVG"
 
 
-def ColumnField( # noqa: N802
+def ColumnField(  # noqa: N802
     default: Any = None,
     *,
     primary_key: bool = False,
     foreign_key: Union["Column", None] = None,
-    **kwargs,# noqa: ANN003
+    **kwargs,  # noqa: ANN003
 ) -> Any:
     """A wrapper function for pydantic's Field, which adds a primary_key parameter to the
     json_schema_extra parameter.
