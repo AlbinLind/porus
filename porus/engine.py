@@ -31,7 +31,10 @@ class Engine:
         return False
 
     def _create_table(self, table: type["Table"]) -> None:
-        """Private function that creates the statement to create a table in the database."""
+        """Private function that creates the statement to create a table in the database.
+        
+        It should be safer to use f-strings here, since this does not depend on the input, 
+        but from the code."""
         statement = f"CREATE TABLE {table.table_name}"
         columns = []
         for field in table.model_fields:
@@ -41,6 +44,7 @@ class Engine:
                     column_statement += " PRIMARY KEY"
                 if fk := table.model_fields[field].json_schema_extra.get("foreign_key"):  # type: ignore
                     fk: Column
+                    # This can only create 1 foreign key per column.
                     column_statement += (
                         f", FOREIGN KEY({field}) REFERENCES {fk.table_name}({fk.column_name})"
                     )
@@ -49,13 +53,17 @@ class Engine:
         self.conn.execute(statement)
         self.conn.commit()
 
-    def push(self, table: type["Table"]) -> None:
+    def push(self, table: type["Table"] | list[type["Table"]]) -> None:
         """Pushes a table to the database, and adds it if it does not already exists.
 
         Args:
             table (type["Table"]): The table to be pushed.
         """
-        if not self._check_if_table_exists(table):
+        if isinstance(table, list):
+            for t in table:
+                if not self._check_if_table_exists(t):
+                    self._create_table(table)
+        elif not self._check_if_table_exists(table):
             self._create_table(table)
 
     def _convert_row_to_object(
