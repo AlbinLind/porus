@@ -22,7 +22,7 @@ class TableMeta(ModelMetaclass):
 class Table(BaseModel, metaclass=TableMeta):
     """Base class for tables in porus ORM. This class is also a pydantic model,
     so it can be used in the same way as you would use it. However, it also contains some other
-    notable functinality.
+    notable functionality.
 
     To use it just create a class that inherits from this class, and then add the columns as class
     variables.
